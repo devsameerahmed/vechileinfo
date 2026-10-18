@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CertificateSheet } from './certificate.jsx'
+import { certificateFields } from './certificate.jsx'
 import { fetchVehicleByKey } from './vehicles.js'
 
 function PublicCertificate({ publicKey }) {
@@ -27,7 +27,30 @@ function PublicCertificate({ publicKey }) {
       {status === 'loading' && <p className="public-message">Loading certificate…</p>}
       {status === 'missing' && <p className="public-message">This certificate link is not valid.</p>}
       {status === 'error' && <p className="public-message">The certificate could not be loaded.</p>}
-      {status === 'ready' && vehicle && <CertificateSheet vehicle={vehicle} titleId="public-certificate-title" />}
+      {status === 'ready' && vehicle && (
+        <article className="details-sheet">
+          <h1>Vehicle Certificate Details</h1>
+          <p lang="ar">تفاصيل شهادة المركبة</p>
+          <table>
+            <thead>
+              <tr>
+                <th />
+                <th />
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {certificateFields.map((field) => (
+                <tr key={field.key}>
+                  <td className="label">{field.label}</td>
+                  <td className={`value${field.key === 'status' ? ` details-status-${(vehicle.status || '').toLowerCase()}` : ''}`}>{vehicle[field.key]}</td>
+                  <td className="arabic" lang="ar">{field.arabic}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </article>
+      )}
     </main>
   )
 }

@@ -361,8 +361,22 @@ tbody tr:hover .actions-col { background: #fcfdfa; }
 .qr-placeholder { width: min(240px, 70vw); aspect-ratio: 1; background: #f4f6f3; }
 .qr-caption { margin-top: 14px; color: #809087; font-size: 12px; }
 .qr-link { display: block; margin-top: 8px; color: #4d6758; font-size: 11px; word-break: break-all; }
-.public-certificate { min-height: 100vh; display: grid; align-items: start; justify-items: center; padding: 32px 16px 48px; background: #f5f6f3; }
-.public-certificate .clearance-frame { width: min(100%, 1040px); }
+.public-certificate { min-height: 100vh; display: grid; align-items: start; justify-items: center; padding: 28px 14px 40px; background: #fff; color: #2d2e32; font-family: Arial, Helvetica, sans-serif; }
+.details-sheet { width: min(100%, 430px); min-width: 0; }
+.details-sheet h1 { margin: 18px 0 0; color: #2d2e32; text-align: center; font: 700 22px/1.25 Arial, Helvetica, sans-serif; }
+.details-sheet > p { margin: 10px 0 18px; color: #3a3a3a; direction: rtl; text-align: center; font: 400 18px/1.45 Arial, Helvetica, sans-serif; }
+.details-sheet table { width: 100%; min-width: 0; border-collapse: collapse; table-layout: fixed; background: #fff; white-space: normal; }
+.details-sheet th { height: 36px; padding: 0; border: 1px solid #e4e4e4; background: #c29d66; }
+.details-sheet th:nth-child(1) { width: 25%; }
+.details-sheet th:nth-child(2) { width: 50%; }
+.details-sheet th:nth-child(3) { width: 25%; }
+.details-sheet td { padding: 10px 8px; border: 1px solid #e4e4e4; color: #666; font-size: 14px; line-height: 1.35; vertical-align: middle; background: #fff; overflow-wrap: break-word; }
+.details-sheet td.label { font-weight: 400; text-align: left; }
+.details-sheet td.value { color: #1a1a1a; font-size: 15px; font-weight: 700; text-align: center; }
+.details-sheet td.arabic { direction: rtl; text-align: right; }
+.details-sheet td.details-status-valid { color: #13771d; }
+.details-sheet td.details-status-invalid { color: #b42318; }
+.details-sheet td.details-status-pending { color: #b86e12; }
 .public-message { margin-top: 18vh; color: #66746c; font-size: 14px; }
 .setup-banner { margin-top: 16px; padding: 12px 14px; border: 1px solid #ead9c2; border-radius: 8px; background: #fbf6ef; color: #6a5340; font-size: 12px; line-height: 1.5; }
 .qr-modal .modal-actions { justify-content: center; }
@@ -379,6 +393,7 @@ tbody tr:hover .actions-col { background: #fcfdfa; }
   .certificate-sheet td.arabic { font-size: 12.5px; }
   .certificate-view .modal-actions { gap: 6px; }
   .certificate-view .modal-actions .button { min-height: 34px; padding: 0 10px; font-size: 12px; }
-  .public-certificate { padding: 12px; background: #fff; overflow-x: auto; }
+  .public-certificate { padding: 18px 12px 32px; }
   .clearance-frame { min-width: 760px; }
+  .public-certificate .clearance-frame { min-width: 0; }
 }
