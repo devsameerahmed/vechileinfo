@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import QRCode from 'qrcode'
-import { blankVehicle, certificateVehicle, CertificateSheet, downloadCertificatePdf } from './certificate.jsx'
+import { blankVehicle, certificateVehicle } from './certificate.jsx'
 import { supabase } from './supabase.js'
 import { certificateLink, insertVehicle, loadVehicles, removeVehicle, updateVehicle } from './vehicles.js'
 
@@ -78,7 +78,6 @@ function App({ user }) {
   const [activeNav, setActiveNav] = useState('Dashboard')
   const [actionMenu, setActionMenu] = useState(null)
   const [saving, setSaving] = useState(false)
-  const [downloading, setDownloading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [notice, setNotice] = useState('')
 
@@ -165,21 +164,9 @@ function App({ user }) {
     setModal({ type: 'vehicle', vehicleId: vehicle.id })
   }
 
-  function openView(vehicle) {
+  function openView() {
     setActionMenu(null)
-    setModal({ type: 'view', vehicle })
-  }
-
-  async function downloadViewPdf(vehicle) {
-    setDownloading(true)
-    try {
-      await downloadCertificatePdf(vehicle)
-      setToast('Certificate PDF downloaded')
-    } catch (error) {
-      setToast(error.message || 'Could not create the PDF')
-    } finally {
-      setDownloading(false)
-    }
+    setModal({ type: 'view' })
   }
 
   function openQr(vehicle) {
@@ -463,15 +450,9 @@ function App({ user }) {
 
       {modal?.type === 'view' && (
         <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null) }}>
-          <section className="modal-card certificate-view" role="dialog" aria-modal="true" aria-labelledby="view-title">
+          <section className="modal-card unavailable-modal" role="dialog" aria-modal="true" aria-labelledby="view-title">
             <button className="icon-button modal-close certificate-view-close" onClick={() => setModal(null)} aria-label="Close"><Icon name="close" size={19} /></button>
-            <CertificateSheet vehicle={modal.vehicle} />
-            <div className="modal-actions">
-              <button className="button button-light" onClick={() => downloadViewPdf(modal.vehicle)} disabled={downloading}><Icon name="download" size={16} /> {downloading ? 'Preparing PDF…' : 'Download PDF'}</button>
-              <button className="button button-danger" onClick={() => openDelete(modal.vehicle)} disabled={downloading}>Delete</button>
-              <button className="button button-light" onClick={() => setModal(null)} disabled={downloading}>Close</button>
-              <button className="button button-primary" onClick={() => openEdit(modal.vehicle)} disabled={downloading}><Icon name="edit" size={16} /> Edit</button>
-            </div>
+            <h2 id="view-title" className="unavailable-message">No data available</h2>
           </section>
         </div>
       )}
@@ -497,7 +478,7 @@ function App({ user }) {
         <>
           <button className="menu-backdrop" aria-label="Close actions" onClick={() => setActionMenu(null)} />
           <div className="action-menu" role="menu" style={{ top: actionMenu.top, left: actionMenu.left }}>
-            <button role="menuitem" onClick={() => openView(actionMenu.vehicle)}><Icon name="eye" size={15} /> View</button>
+            <button role="menuitem" onClick={openView}><Icon name="eye" size={15} /> View</button>
             <button role="menuitem" onClick={() => openQr(actionMenu.vehicle)}><Icon name="qr" size={15} /> QR code</button>
             <button role="menuitem" onClick={() => openEdit(actionMenu.vehicle)}><Icon name="edit" size={15} /> Edit</button>
             <button role="menuitem" className="danger" onClick={() => openDelete(actionMenu.vehicle)}><Icon name="trash" size={15} /> Delete</button>
