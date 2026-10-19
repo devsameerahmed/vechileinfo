@@ -1,55 +1,50 @@
-import { blankVehicle } from './certificate.jsx'
 import { supabase } from './supabase.js'
 
-const LOCAL_KEY = 'heritage-vehicle-certificates'
+const LOCAL_KEY = 'heritage-vehicles'
 
-export function createPublicKey() {
+export const blankVehicle = {
+  date: '',
+  makeBody: '',
+  model: '',
+  country: '',
+  chassisNo: '',
+  engineNo: '',
+  color: '',
+  remarks: '',
+}
+
+function createRecordKey() {
   const bytes = new Uint8Array(12)
   crypto.getRandomValues(bytes)
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
 }
 
-export function certificateLink(publicKey) {
-  return `${window.location.origin}/c/${publicKey}`
-}
-
 export function fromRow(row) {
   return {
     id: row.id,
-    publicKey: row.public_key,
-    certificateNumber: row.certificate_number || '',
     date: row.certificate_date || '',
     makeBody: row.make_body || '',
-    importerName: row.importer_name || '',
-    declarationNumber: row.declaration_number || '',
     model: row.model || '',
     country: row.country || '',
     chassisNo: row.chassis_no || '',
     engineNo: row.engine_no || '',
     color: row.color || '',
     remarks: row.remarks || '',
-    userId: row.user_id || '',
-    status: row.status || 'VALID',
   }
 }
 
 function toRow(vehicle, includeKey) {
   const row = {
-    certificate_number: vehicle.certificateNumber || '',
     certificate_date: vehicle.date || '',
     make_body: vehicle.makeBody || '',
-    importer_name: vehicle.importerName || '',
-    declaration_number: vehicle.declarationNumber || '',
     model: vehicle.model || '',
     country: vehicle.country || '',
     chassis_no: vehicle.chassisNo || '',
     engine_no: vehicle.engineNo || '',
     color: vehicle.color || '',
     remarks: vehicle.remarks || '',
-    user_id: vehicle.userId || '',
-    status: vehicle.status || 'VALID',
   }
-  if (includeKey) row.public_key = vehicle.publicKey
+  if (includeKey) row.public_key = createRecordKey()
   return row
 }
 
@@ -72,7 +67,7 @@ export function loadVehicles() {
 async function fetchVehicles() {
   const { data, error } = await supabase
     .from('vehicle_certificates')
-    .select('*')
+    .select('id, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks, created_at')
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -82,21 +77,18 @@ async function fetchVehicles() {
   const localVehicles = readLocalVehicles()
   if (localVehicles.length === 0) return []
 
-  const payload = localVehicles.map((vehicle) =>
-    toRow({ ...blankVehicle, ...vehicle, publicKey: vehicle.publicKey || createPublicKey() }, true),
-  )
-  const inserted = await supabase.from('vehicle_certificates').insert(payload).select()
+  const payload = localVehicles.map((vehicle) => toRow({ ...blankVehicle, ...vehicle }, true))
+  const inserted = await supabase.from('vehicle_certificates').insert(payload).select('id, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks, created_at')
   if (inserted.error) throw inserted.error
   localStorage.removeItem(LOCAL_KEY)
   return inserted.data.map(fromRow)
 }
 
 export async function insertVehicle(vehicle) {
-  const publicKey = createPublicKey()
   const { data, error } = await supabase
     .from('vehicle_certificates')
-    .insert(toRow({ ...vehicle, publicKey }, true))
-    .select()
+    .insert(toRow(vehicle, true))
+    .select('id, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks, created_at')
     .single()
   if (error) throw error
   return fromRow(data)
@@ -107,7 +99,7 @@ export async function updateVehicle(id, vehicle) {
     .from('vehicle_certificates')
     .update(toRow(vehicle, false))
     .eq('id', id)
-    .select()
+    .select('id, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks, created_at')
     .single()
   if (error) throw error
   return fromRow(data)
@@ -116,14 +108,4 @@ export async function updateVehicle(id, vehicle) {
 export async function removeVehicle(id) {
   const { error } = await supabase.from('vehicle_certificates').delete().eq('id', id)
   if (error) throw error
-}
-
-export async function fetchVehicleByKey(publicKey) {
-  const { data, error } = await supabase
-    .from('vehicle_certificates')
-    .select('*')
-    .eq('public_key', publicKey)
-    .maybeSingle()
-  if (error) throw error
-  return data ? fromRow(data) : null
 }

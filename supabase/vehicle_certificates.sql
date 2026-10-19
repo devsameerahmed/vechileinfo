@@ -19,13 +19,16 @@ create table if not exists public.vehicle_certificates (
 
 alter table public.vehicle_certificates enable row level security;
 
-grant select, insert, update, delete on table public.vehicle_certificates to anon, authenticated;
+grant select, insert, update, delete on table public.vehicle_certificates to authenticated;
+
+revoke select, insert, update, delete on table public.vehicle_certificates from anon;
 
 drop policy if exists "Anyone can read a vehicle certificate" on public.vehicle_certificates;
-create policy "Anyone can read a vehicle certificate"
+drop policy if exists "Signed-in users can read vehicles" on public.vehicle_certificates;
+create policy "Signed-in users can read vehicles"
   on public.vehicle_certificates
   for select
-  to anon, authenticated
+  to authenticated
   using (true);
 
 drop policy if exists "Dashboard can add a vehicle certificate" on public.vehicle_certificates;
@@ -49,5 +52,3 @@ create policy "Dashboard can delete a vehicle certificate"
   for delete
   to authenticated
   using (true);
-
-revoke insert, update, delete on table public.vehicle_certificates from anon;

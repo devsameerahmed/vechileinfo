@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import QRCode from 'qrcode'
-import { blankVehicle, certificateVehicle } from './certificate.jsx'
 import { supabase } from './supabase.js'
-import { certificateLink, insertVehicle, loadVehicles, removeVehicle, updateVehicle } from './vehicles.js'
+import { blankVehicle, insertVehicle, loadVehicles, removeVehicle, updateVehicle } from './vehicles.js'
 
 function Icon({ name, size = 18, strokeWidth = 1.8 }) {
   const shared = {
@@ -36,8 +34,6 @@ function Icon({ name, size = 18, strokeWidth = 1.8 }) {
     check: <path d="m5 12 4 4L19 6" />,
     lock: <><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 1 1 8 0v3M12 14v3" /></>,
     eye: <><path d="M2.5 12S6.2 6.5 12 6.5 21.5 12 21.5 12 17.8 17.5 12 17.5 2.5 12 2.5 12Z" /><circle cx="12" cy="12" r="2.6" /></>,
-    qr: <><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><path d="M14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2zM16 16h2v2h-2z" /></>,
-    download: <><path d="M12 4v11" /><path d="m8 11 4 4 4-4" /><path d="M5 20h14" /></>,
   }
 
   return <svg {...shared}>{paths[name] || paths.grid}</svg>
@@ -59,6 +55,17 @@ function VintageCarMark() {
   )
 }
 
+const detailFields = [
+  ['date', 'Date'],
+  ['makeBody', 'Make / body type'],
+  ['model', 'Model'],
+  ['country', 'Country'],
+  ['chassisNo', 'Chassis no'],
+  ['engineNo', 'Engine no'],
+  ['color', 'Color'],
+  ['remarks', 'Remarks'],
+]
+
 function App({ user }) {
   const email = user?.email || ''
   const fullName = user?.user_metadata?.full_name || email.split('@')[0] || 'Administrator'
@@ -71,7 +78,6 @@ function App({ user }) {
 
   const [vehicles, setVehicles] = useState([])
   const [query, setQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('All vehicles')
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(blankVehicle)
   const [toast, setToast] = useState('')
@@ -129,32 +135,19 @@ function App({ user }) {
   const visibleVehicles = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
     return vehicles.filter((vehicle) => {
-      const matchesStatus = statusFilter === 'All vehicles' || vehicle.status === statusFilter
-      const searchable = [
-        vehicle.certificateNumber,
-        vehicle.makeBody,
-        vehicle.importerName,
-        vehicle.declarationNumber,
-        vehicle.model,
-        vehicle.country,
-        vehicle.chassisNo,
-        vehicle.engineNo,
-        vehicle.color,
-        vehicle.userId,
-        vehicle.remarks,
-      ]
+      const searchable = [vehicle.date, vehicle.makeBody, vehicle.model, vehicle.country, vehicle.chassisNo, vehicle.engineNo, vehicle.color, vehicle.remarks]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
-      return matchesStatus && searchable.includes(normalizedQuery)
+      return searchable.includes(normalizedQuery)
     })
-  }, [vehicles, query, statusFilter])
+  }, [vehicles, query])
 
-  const validCount = vehicles.filter((vehicle) => vehicle.status === 'VALID').length
+  const chassisCount = vehicles.filter((vehicle) => vehicle.chassisNo).length
   const countryCount = new Set(vehicles.map((vehicle) => vehicle.country).filter(Boolean)).size
 
   function openCreate() {
-    setForm(certificateVehicle)
+    setForm(blankVehicle)
     setModal({ type: 'vehicle' })
   }
 
@@ -164,14 +157,9 @@ function App({ user }) {
     setModal({ type: 'vehicle', vehicleId: vehicle.id })
   }
 
-  function openView() {
+  function openView(vehicle) {
     setActionMenu(null)
-    setModal({ type: 'view' })
-  }
-
-  function openQr(vehicle) {
-    setActionMenu(null)
-    setModal({ type: 'qr', vehicle })
+    setModal({ type: 'view', vehicle })
   }
 
   function openDelete(vehicle) {
@@ -195,11 +183,11 @@ function App({ user }) {
       if (modal.vehicleId) {
         const updated = await updateVehicle(modal.vehicleId, form)
         setVehicles((current) => current.map((vehicle) => (vehicle.id === updated.id ? updated : vehicle)))
-        setToast('Vehicle certificate updated')
+        setToast('Vehicle updated')
       } else {
         const created = await insertVehicle(form)
         setVehicles((current) => [created, ...current])
-        setToast('Vehicle certificate saved')
+        setToast('Vehicle saved')
       }
       setModal(null)
     } catch (error) {
@@ -301,14 +289,14 @@ function App({ user }) {
             </article>
             <article className="stat-card">
               <div className="stat-top"><span className="stat-icon amber"><Icon name="check" size={19} /></span><span className="stat-change"><span className="change-arrow">↗</span> 8.2%</span></div>
-              <div className="stat-value">{validCount.toString().padStart(2, '0')}</div>
-              <div className="stat-label">Valid certificates <span>status marked valid</span></div>
+              <div className="stat-value">{chassisCount.toString().padStart(2, '0')}</div>
+              <div className="stat-label">Chassis recorded <span>in this collection</span></div>
               <div className="stat-sparkline spark-amber" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
             </article>
             <article className="stat-card">
               <div className="stat-top"><span className="stat-icon rose"><Icon name="chart" size={19} /></span><span className="stat-change muted-change">Portfolio</span></div>
               <div className="stat-value">{countryCount.toString().padStart(2, '0')}</div>
-              <div className="stat-label">Countries of origin <span>listed on certificates</span></div>
+              <div className="stat-label">Countries of origin <span>in this collection</span></div>
               <div className="stat-sparkline spark-rose" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
             </article>
             <article className="stat-card stat-card-note">
@@ -333,40 +321,26 @@ function App({ user }) {
             <div className="inventory-toolbar">
               <label className="search-box">
                 <Icon name="search" size={18} />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search certificates..." aria-label="Search certificates" />
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search vehicles..." aria-label="Search vehicles" />
                 <kbd>⌘ K</kbd>
               </label>
               <div className="toolbar-right">
-                <label className="filter-select">
-                  <Icon name="filter" size={16} />
-                  <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter by status">
-                    <option>All vehicles</option>
-                    <option>VALID</option>
-                    <option>INVALID</option>
-                    <option>PENDING</option>
-                  </select>
-                  <Icon name="down" size={14} />
-                </label>
-                <button className="button button-light" onClick={() => { setQuery(''); setStatusFilter('All vehicles') }}>Reset</button>
+                <button className="button button-light" onClick={() => setQuery('')}>Reset</button>
               </div>
             </div>
 
             <div className="table-wrap">
-              <table className="certificate-table">
+              <table className="inventory-table">
                 <thead>
                   <tr>
                     <th className="actions-col">ACTIONS</th>
-                    <th>CERTIFICATE</th>
                     <th>DATE</th>
                     <th>MAKE / BODY TYPE</th>
-                    <th>IMPORTER</th>
-                    <th>DECLARATION</th>
                     <th>MODEL</th>
                     <th>COUNTRY</th>
                     <th>CHASSIS NO</th>
                     <th>ENGINE NO</th>
                     <th>COLOR</th>
-                    <th>STATUS</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -383,35 +357,29 @@ function App({ user }) {
                           Actions <Icon name="down" size={13} />
                         </button>
                       </td>
-                      <td className="price-cell">{vehicle.certificateNumber}</td>
                       <td className="table-muted">{vehicle.date}</td>
                       <td>
                         <div className="vehicle-info">
                           <strong>{vehicle.makeBody}</strong>
-                          {(vehicle.userId || vehicle.remarks) && (
-                            <span>{[vehicle.userId, vehicle.remarks].filter(Boolean).join(' · ')}</span>
-                          )}
+                          {vehicle.remarks && <span>{vehicle.remarks}</span>}
                         </div>
                       </td>
-                      <td className="table-muted">{vehicle.importerName}</td>
-                      <td className="table-muted">{vehicle.declarationNumber}</td>
                       <td className="table-muted">{vehicle.model}</td>
                       <td className="table-muted">{vehicle.country}</td>
                       <td className="table-muted">{vehicle.chassisNo}</td>
                       <td className="table-muted">{vehicle.engineNo || '—'}</td>
                       <td className="table-muted">{vehicle.color}</td>
-                      <td><span className={`status-badge status-${String(vehicle.status).toLowerCase()}`}><i />{vehicle.status}</span></td>
                     </tr>
                   ))}
                   {visibleVehicles.length === 0 && (
-                    <tr><td colSpan="12"><div className="empty-state"><span className="empty-icon"><Icon name="car" size={22} /></span><strong>{loading ? 'Loading certificates' : 'No vehicles found'}</strong><span>{loading ? 'Reading records from Supabase.' : 'Add a vehicle certificate to your collection.'}</span>{!loading && <button onClick={openCreate}>Add a vehicle <Icon name="arrow" size={15} /></button>}</div></td></tr>
+                    <tr><td colSpan="8"><div className="empty-state"><span className="empty-icon"><Icon name="car" size={22} /></span><strong>{loading ? 'Loading vehicles' : 'No vehicles found'}</strong><span>{loading ? 'Reading records from Supabase.' : 'Add a vehicle to your collection.'}</span>{!loading && <button onClick={openCreate}>Add a vehicle <Icon name="arrow" size={15} /></button>}</div></td></tr>
                   )}
                 </tbody>
               </table>
             </div>
             <div className="table-footer">
               <span>Showing <strong>{visibleVehicles.length ? 1 : 0}–{visibleVehicles.length}</strong> of <strong>{vehicles.length}</strong> vehicles</span>
-              <button className="view-all-button" onClick={() => { setStatusFilter('All vehicles'); setQuery('') }}>View all vehicles <Icon name="arrow" size={15} /></button>
+              <button className="view-all-button" onClick={() => setQuery('')}>View all vehicles <Icon name="arrow" size={15} /></button>
             </div>
           </section>
           <footer className="page-footer"><span>© 2026 Heritage Motor Company</span><span><i /> Your collection is looking good</span></footer>
@@ -420,28 +388,22 @@ function App({ user }) {
 
       {modal?.type === 'vehicle' && (
         <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null) }}>
-          <section className="modal-card certificate-modal" role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title">
+          <section className="modal-card vehicle-modal" role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title">
             <div className="modal-header">
-              <div><span className="section-kicker">{modal.vehicleId ? 'UPDATE CERTIFICATE' : 'VEHICLE CERTIFICATE'}</span><h2 id="vehicle-modal-title">{modal.vehicleId ? 'Edit vehicle' : 'Add a vehicle'}</h2><p>Vehicle certificate details, matching the customs record.</p></div>
+              <div><span className="section-kicker">{modal.vehicleId ? 'UPDATE VEHICLE' : 'NEW VEHICLE'}</span><h2 id="vehicle-modal-title">{modal.vehicleId ? 'Edit vehicle' : 'Add a vehicle'}</h2><p>Private inventory details for this collection.</p></div>
               <button className="icon-button modal-close" onClick={() => setModal(null)} aria-label="Close"><Icon name="close" size={19} /></button>
             </div>
             <form onSubmit={saveVehicle}>
               <div className="form-grid">
-                <label className="form-field"><span>Certificate Number</span><input required value={form.certificateNumber} onChange={(event) => setForm({ ...form, certificateNumber: event.target.value })} placeholder="29636" /></label>
                 <label className="form-field"><span>Date</span><input required value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} placeholder="08/09/2026" /></label>
                 <label className="form-field"><span>Make / Body Type</span><input required value={form.makeBody} onChange={(event) => setForm({ ...form, makeBody: event.target.value })} placeholder="LEXUS - LS460 (Sedan)" /></label>
-                <label className="form-field"><span>Importer Name</span><input required value={form.importerName} onChange={(event) => setForm({ ...form, importerName: event.target.value })} placeholder="NOOR USED CARS TR LLC" /></label>
-                <label className="form-field"><span>Declaration Number</span><input required value={form.declarationNumber} onChange={(event) => setForm({ ...form, declarationNumber: event.target.value })} placeholder="2026-53-4-50832" /></label>
-                <label className="form-field"><span>Model</span><input required value={form.model} onChange={(event) => setForm({ ...form, model: event.target.value })} placeholder="(2014)" /></label>
+                <label className="form-field"><span>Model</span><input required value={form.model} onChange={(event) => setForm({ ...form, model: event.target.value })} placeholder="2014" /></label>
                 <label className="form-field"><span>Country</span><input required value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder="Japan" /></label>
-                <label className="form-field"><span>Chassis No</span><input required value={form.chassisNo} onChange={(event) => setForm({ ...form, chassisNo: event.target.value })} placeholder="JTHBL5EF6E5130108" /></label>
+                <label className="form-field"><span>Chassis No</span><input required value={form.chassisNo} onChange={(event) => setForm({ ...form, chassisNo: event.target.value })} placeholder="Chassis number" /></label>
                 <label className="form-field"><span>Engine No <em>optional</em></span><input value={form.engineNo} onChange={(event) => setForm({ ...form, engineNo: event.target.value })} placeholder="Engine number" /></label>
-                <label className="form-field"><span>Color</span><input required value={form.color} onChange={(event) => setForm({ ...form, color: event.target.value })} placeholder="GRAY" /></label>
-                <label className="form-field"><span>User ID <em>optional</em></span><input value={form.userId} onChange={(event) => setForm({ ...form, userId: event.target.value })} placeholder="User ID" /></label>
-                <label className="form-field"><span>Status</span><div className="select-wrap"><select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}><option>VALID</option><option>INVALID</option><option>PENDING</option></select><Icon name="down" size={15} /></div></label>
-                <label className="form-field span-2"><span>Remarks <em>optional</em></span><textarea value={form.remarks} onChange={(event) => setForm({ ...form, remarks: event.target.value })} placeholder="Remarks" /></label>
+                <label className="form-field"><span>Color</span><input required value={form.color} onChange={(event) => setForm({ ...form, color: event.target.value })} placeholder="Gray" /></label>
+                <label className="form-field span-2"><span>Remarks <em>optional</em></span><textarea value={form.remarks} onChange={(event) => setForm({ ...form, remarks: event.target.value })} placeholder="Notes" /></label>
               </div>
-              <div className="form-note"><Icon name="lock" size={15} /> Saving creates a public key. Anyone with the QR code can open this certificate.</div>
               <div className="modal-actions"><button type="button" className="button button-light" onClick={() => setModal(null)} disabled={saving}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{modal.vehicleId ? 'Save changes' : <><Icon name="plus" size={17} /> Add vehicle</>}</button></div>
             </form>
           </section>
@@ -450,16 +412,21 @@ function App({ user }) {
 
       {modal?.type === 'view' && (
         <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null) }}>
-          <section className="modal-card unavailable-modal" role="dialog" aria-modal="true" aria-labelledby="view-title">
-            <button className="icon-button modal-close certificate-view-close" onClick={() => setModal(null)} aria-label="Close"><Icon name="close" size={19} /></button>
-            <h2 id="view-title" className="unavailable-message">No data available</h2>
+          <section className="modal-card vehicle-modal" role="dialog" aria-modal="true" aria-labelledby="view-title">
+            <div className="modal-header">
+              <div><span className="section-kicker">VEHICLE</span><h2 id="view-title">{modal.vehicle.makeBody || 'Vehicle'}</h2></div>
+              <button className="icon-button modal-close" onClick={() => setModal(null)} aria-label="Close"><Icon name="close" size={19} /></button>
+            </div>
+            <dl className="detail-list">
+              {detailFields.map(([key, label]) => (
+                <div key={key}>
+                  <dt>{label}</dt>
+                  <dd>{modal.vehicle[key] || '—'}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="modal-actions"><button className="button button-light" onClick={() => setModal(null)}>Close</button></div>
           </section>
-        </div>
-      )}
-
-      {modal?.type === 'qr' && (
-        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null) }}>
-          <CertificateQrModal vehicle={modal.vehicle} onClose={() => setModal(null)} />
         </div>
       )}
 
@@ -478,8 +445,7 @@ function App({ user }) {
         <>
           <button className="menu-backdrop" aria-label="Close actions" onClick={() => setActionMenu(null)} />
           <div className="action-menu" role="menu" style={{ top: actionMenu.top, left: actionMenu.left }}>
-            <button role="menuitem" onClick={openView}><Icon name="eye" size={15} /> View</button>
-            <button role="menuitem" onClick={() => openQr(actionMenu.vehicle)}><Icon name="qr" size={15} /> QR code</button>
+            <button role="menuitem" onClick={() => openView(actionMenu.vehicle)}><Icon name="eye" size={15} /> View</button>
             <button role="menuitem" onClick={() => openEdit(actionMenu.vehicle)}><Icon name="edit" size={15} /> Edit</button>
             <button role="menuitem" className="danger" onClick={() => openDelete(actionMenu.vehicle)}><Icon name="trash" size={15} /> Delete</button>
           </div>
@@ -488,42 +454,6 @@ function App({ user }) {
 
       {toast && <div className="toast" role="status"><span><Icon name="check" size={16} /></span>{toast}</div>}
     </div>
-  )
-}
-
-function CertificateQrModal({ vehicle, onClose }) {
-  const [src, setSrc] = useState('')
-  const link = vehicle.publicKey ? certificateLink(vehicle.publicKey) : ''
-
-  useEffect(() => {
-    if (!link) return undefined
-    let active = true
-    QRCode.toDataURL(link, {
-      margin: 1,
-      width: 320,
-      errorCorrectionLevel: 'M',
-      color: { dark: '#1c1c1c', light: '#ffffff' },
-    }).then((url) => {
-      if (active) setSrc(url)
-    })
-    return () => {
-      active = false
-    }
-  }, [link])
-
-  return (
-    <section className="modal-card qr-modal" role="dialog" aria-modal="true" aria-labelledby="qr-title">
-      <button className="icon-button modal-close qr-modal-close" onClick={onClose} aria-label="Close"><Icon name="close" size={19} /></button>
-      <span className="section-kicker">VEHICLE CERTIFICATE</span>
-      <h2 id="qr-title">QR code</h2>
-      <p>{vehicle.makeBody}</p>
-      <div className="qr-frame">
-        {src ? <img src={src} alt={`QR code for certificate ${vehicle.certificateNumber}`} /> : <span className="qr-placeholder" />}
-      </div>
-      <p className="qr-caption">Anyone can open this certificate, signed in or not.</p>
-      {link && <a className="qr-link" href={link}>{link}</a>}
-      <div className="modal-actions"><button className="button button-light" onClick={onClose}>Close</button></div>
-    </section>
   )
 }
 
