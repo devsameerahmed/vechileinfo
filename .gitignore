@@ -3,6 +3,5 @@ dist/
 .vite/
 .DS_Store
 .env
-.vercel
 .env.local
 .env.*.local
