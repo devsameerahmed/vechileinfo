@@ -11,6 +11,8 @@ function AuthGate() {
     let active = true
     supabase.auth.getSession().then(({ data }) => {
       if (active) setSession(data.session)
+    }).catch(() => {
+      if (active) setSession(null)
     })
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession)
@@ -23,12 +25,12 @@ function AuthGate() {
 
   const publicRecordMatch = window.location.pathname.match(/^\/certificate\/([a-f0-9]+)\/?$/i)
 
-  if (session === undefined) {
-    return <main className="login-screen"><p className="public-message">Loading…</p></main>
-  }
-
   if (publicRecordMatch) {
     return <PublicCertificate publicKey={publicRecordMatch[1]} user={session?.user} />
+  }
+
+  if (session === undefined) {
+    return <main className="login-screen"><p className="public-message">Loading…</p></main>
   }
 
   if (!session) return <Login />

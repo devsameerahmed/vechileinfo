@@ -111,11 +111,25 @@ export async function removeVehicle(id) {
   if (error) throw error
 }
 
+const publicVehicleColumns = 'public_key, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks'
+
 export async function loadPublicVehicle(publicKey) {
-  const { data, error } = await supabase.rpc('get_public_vehicle_certificate', {
+  const rpc = await supabase.rpc('get_public_vehicle_certificate', {
     lookup_key: publicKey,
   })
+  if (!rpc.error) {
+    if (!rpc.data?.length) return null
+    return fromRow(rpc.data[0])
+  }
+
+  const missingFunction = /could not find the function/i.test(rpc.error.message || '')
+  if (!missingFunction) throw rpc.error
+
+  const { data, error } = await supabase
+    .from('vehicle_certificates')
+    .select(publicVehicleColumns)
+    .eq('public_key', publicKey)
+    .maybeSingle()
   if (error) throw error
-  if (!data?.length) return null
-  return fromRow(data[0])
+  return data ? fromRow(data) : null
 }
