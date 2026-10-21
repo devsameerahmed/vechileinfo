@@ -25,10 +25,8 @@ function PublicCertificate({ publicKey }) {
   useEffect(() => {
     const previousTitle = document.title
     document.title = 'Vehicle Certificate Details'
-    document.documentElement.classList.add('certificate-active')
     return () => {
       document.title = previousTitle
-      document.documentElement.classList.remove('certificate-active')
     }
   }, [])
 
@@ -62,41 +60,43 @@ function PublicCertificate({ publicKey }) {
     }))
     : []
 
+  const cell = 'h-auto border border-[#d7d7d7] px-2 py-[11px] align-middle text-sm tracking-normal max-[720px]:px-1.5 max-[720px]:py-2.5 max-[720px]:text-[13.5px]'
+
   return (
-    <main className="certificate-page">
-      <div className="certificate">
-        <h1>Vehicle Certificate Details</h1>
-        <p className="certificate-ar" lang="ar" dir="rtl">
+    <main className="m-0 min-h-screen w-full max-w-none bg-white font-certificate text-[#333]">
+      <div className="mx-auto w-full max-w-[430px] px-3 pt-[34px] pb-12 max-[720px]:px-2.5 max-[720px]:pt-7 max-[720px]:pb-10">
+        <h1 className="m-0 max-w-none text-center font-certificate text-[26px] leading-[1.25] font-medium tracking-normal text-[#2a2a2a] max-[720px]:text-2xl">Vehicle Certificate Details</h1>
+        <p className="mt-2 mb-[18px] text-center font-arabic text-2xl leading-[1.4] font-medium text-[#2a2a2a] max-[720px]:text-[22px]" lang="ar" dir="rtl">
           تفاصيل شهادة المركبة
         </p>
         {loading ? (
-          <p className="certificate-message" role="status">Loading vehicle record…</p>
+          <p className="my-[18px] text-center text-sm leading-normal text-[#333]" role="status">Loading vehicle record…</p>
         ) : error ? (
-          <p className="certificate-message certificate-error" role="alert">{error}</p>
+          <p className="my-[18px] text-center text-sm leading-normal text-[#a35248]" role="alert">{error}</p>
         ) : !vehicle ? (
-          <p className="certificate-message" role="status">This public vehicle record could not be found.</p>
+          <p className="my-[18px] text-center text-sm leading-normal text-[#333]" role="status">This public vehicle record could not be found.</p>
         ) : (
-          <table>
+          <table className="w-full table-fixed border-collapse bg-white">
             <colgroup>
-              <col className="col-label" />
-              <col className="col-value" />
-              <col className="col-arabic" />
+              <col className="w-[30%]" />
+              <col className="w-[42%]" />
+              <col className="w-[28%]" />
             </colgroup>
             <thead>
               <tr>
-                <th />
-                <th />
-                <th />
+                <th className="h-[34px] border border-x-[#efe4cc] border-y-[#c5a15a] bg-[#c5a15a] p-0" />
+                <th className="h-[34px] border border-x-[#efe4cc] border-y-[#c5a15a] bg-[#c5a15a] p-0" />
+                <th className="h-[34px] border border-x-[#efe4cc] border-y-[#c5a15a] bg-[#c5a15a] p-0" />
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
                 <tr key={row.label}>
-                  <th scope="row">{row.label}</th>
-                  <td>
+                  <th className={`${cell} text-left font-certificate leading-[1.25] font-normal text-[#3a3a3a]`} scope="row">{row.label}</th>
+                  <td className={`${cell} text-center font-certificate leading-[1.25] font-bold text-[#111]`}>
                     <CellValue value={row.value} status={row.status} />
                   </td>
-                  <td className="arabic" lang="ar" dir="rtl">
+                  <td className={`${cell} text-right font-arabic leading-[1.45] font-medium text-[#333]`} lang="ar" dir="rtl">
                     {row.arabic}
                   </td>
                 </tr>
@@ -117,9 +117,9 @@ function formatMakeBody(value) {
 function CellValue({ value, status }) {
   const lines = Array.isArray(value) ? value : [value || '']
   return (
-    <span className={status ? 'is-valid' : undefined}>
+    <span className={status ? 'font-bold text-[#1e9a1e]' : undefined}>
       {lines.map((line) => (
-        <span key={line || 'empty'} className="value-line">
+        <span key={line || 'empty'} className="block">
           {line}
         </span>
       ))}

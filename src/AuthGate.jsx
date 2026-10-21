@@ -30,7 +30,11 @@ function AuthGate() {
   }
 
   if (session === undefined) {
-    return <main className="login-screen"><p className="public-message">Loading…</p></main>
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#20312e] px-4 py-6">
+        <p className="mt-[18vh] text-sm text-[#66746c]">Loading…</p>
+      </main>
+    )
   }
 
   if (!session) return <Login />

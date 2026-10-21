@@ -3,6 +3,32 @@ import QRCode from 'qrcode'
 import { supabase } from './supabase.js'
 import { blankVehicle, insertVehicle, loadVehicles, removeVehicle, updateVehicle } from './vehicles.js'
 
+function cn(...parts) {
+  return parts.filter(Boolean).join(' ')
+}
+
+const button = 'inline-flex items-center justify-center gap-2 rounded-md font-semibold whitespace-nowrap transition duration-[180ms]'
+const primaryColors = 'border border-[#293a35] bg-[#293a35] text-white shadow-[0_2px_4px_#1c342c1c] hover:-translate-y-px hover:border-[#3c514a] hover:bg-[#3c514a]'
+const buttonPrimary = `${button} min-h-[37px] px-3.5 text-[10.5px] ${primaryColors}`
+const buttonOutline = `${button} min-h-[37px] border border-[#e3e8e1] bg-white px-3.5 text-[10.5px] text-[#485851] hover:border-[#cbd6cd] hover:bg-[#fafbf8]`
+const buttonLight = `${button} min-h-[37px] border border-[#e6eae5] bg-white px-3.5 text-[10.5px] text-[#68746e] hover:border-[#cbd6cd] hover:bg-[#fafbf8]`
+const buttonDanger = `${button} min-h-[37px] border border-[#aa5147] bg-[#aa5147] px-3.5 text-[10.5px] text-white`
+const buttonToolbar = `${button} min-h-[35px] border border-[#e6eae5] bg-white px-[11px] text-[10px] text-[#68746e] hover:border-[#cbd6cd] hover:bg-[#fafbf8] max-[760px]:px-[7px] max-[760px]:text-[9px]`
+const iconButton = 'relative grid size-[34px] shrink-0 place-items-center rounded-full border bg-transparent text-[#52615b]'
+const field = 'flex flex-col gap-1.5 text-[10px] font-semibold text-[#56645c]'
+const control = 'h-[38px] w-full rounded-[5px] border border-[#e4e9e3] bg-white px-2.5 text-[10px] font-normal text-[#4c5a53] placeholder:text-[#b2bab4] max-[480px]:h-9'
+const area = 'min-h-[72px] w-full resize-y rounded-[5px] border border-[#e4e9e3] bg-white p-2.5 text-[10px] leading-normal font-normal text-[#4c5a53]'
+const optional = 'ml-[3px] text-[9px] font-normal text-[#a2aaa4] not-italic'
+const modalShell = 'w-full overflow-y-auto rounded-[10px] border border-[#e8ebe5] bg-white shadow-[0_24px_70px_#16251f38] animate-rise max-[480px]:px-[17px] max-[480px]:pt-5 max-[480px]:pb-4'
+const formModal = `${modalShell} max-h-[min(92vh,860px)] max-w-[720px] px-[26px] pt-[25px] pb-[22px]`
+const deleteModalClass = `${modalShell} max-h-[min(90vh,760px)] max-w-[410px] p-[27px]`
+const qrModalClass = `${modalShell} grid max-h-[min(90vh,760px)] max-w-[340px] place-items-center p-[18px]`
+const backdrop = 'fixed inset-0 z-[8] grid animate-fade-in place-items-center bg-[#17231f80] p-5 backdrop-blur-[3px]'
+const statCard = 'relative min-h-[148px] overflow-hidden rounded-lg border max-[1120px]:min-h-[135px] max-[760px]:min-h-[133px] max-[480px]:min-h-[127px]'
+const statPad = 'border-[#e8ebe6] bg-white px-[17px] pt-4 pb-[13px] max-[760px]:p-[13px] max-[480px]:p-[11px]'
+const td = 'h-[65px] text-[10px] max-[760px]:h-[61px]'
+const sparkHeights = ['h-[28%]', 'h-[28%]', 'h-[76%]', 'h-[49%]', 'h-full', 'h-[76%]', 'h-[65%]', 'h-[49%]', 'h-[76%]', 'h-full', 'h-[28%]', 'h-[49%]']
+
 function Icon({ name, size = 18, strokeWidth = 1.8 }) {
   const shared = {
     width: size,
@@ -43,7 +69,7 @@ function Icon({ name, size = 18, strokeWidth = 1.8 }) {
 
 function VintageCarMark() {
   return (
-    <svg className="vintage-car-mark" viewBox="0 0 72 44" fill="none" aria-hidden="true">
+    <svg className="h-10 w-[57px] max-[760px]:w-12" viewBox="0 0 72 44" fill="none" aria-hidden="true">
       <path d="m10 26 3.7-9.4a5.2 5.2 0 0 1 4.8-3.2h24.8c2.5 0 4.7 1.1 6.2 3.2l6.2 8.5 6.1 2.1c1.7.6 2.8 2.1 2.8 3.9v3.4H6.5v-4.3c0-1.9 1.4-3.6 3.5-4.2Z" fill="currentColor" />
       <path d="m18 16.5-3.1 8.1h38.7l-5.7-7.7a3.2 3.2 0 0 0-2.6-1.3H19.3c-.6 0-1.1.3-1.3.9Z" fill="#263432" />
       <path d="m14.4 24.6 3.4-8.7M52.7 25l-6.3-8.4" stroke="#263432" strokeWidth="1.4" />
@@ -54,6 +80,25 @@ function VintageCarMark() {
       <circle cx="51.5" cy="34.5" r="1.7" fill="currentColor" />
       <path d="M3 29h4M65 29h4" stroke="#D99B6C" strokeWidth="2.4" strokeLinecap="round" />
     </svg>
+  )
+}
+
+function Sparkline({ barClass }) {
+  return (
+    <div className="pointer-events-none absolute right-3 bottom-0 flex h-[34px] w-[70px] items-end gap-[3px] opacity-55" aria-hidden="true">
+      {sparkHeights.map((height, index) => (
+        <i key={`${height}-${index}`} className={cn('w-[3px] shrink-0 rounded-t-[3px]', height, barClass)} />
+      ))}
+    </div>
+  )
+}
+
+function navItemClass(active) {
+  return cn(
+    'relative flex h-[43px] w-full items-center gap-[13px] rounded-[7px] border-0 bg-transparent px-[13px] text-left text-[12.5px] text-[#aeb9b3] transition duration-[180ms]',
+    'max-[760px]:h-[38px] max-[760px]:w-auto max-[760px]:gap-[7px] max-[760px]:px-[9px] max-[760px]:text-[10px]',
+    'max-[480px]:w-[34px] max-[480px]:justify-center max-[480px]:px-0',
+    active ? 'bg-[#344742] font-semibold text-white hover:bg-[#344742]' : 'hover:bg-[#2b3d39] hover:text-white',
   )
 }
 
@@ -224,128 +269,134 @@ function App({ user }) {
   }
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <a href="#" className="brand" aria-label="Heritage Motors home" onClick={(event) => event.preventDefault()}>
-          <span className="brand-mark"><VintageCarMark /></span>
-          <span className="brand-copy">
-            <span className="brand-name">HERITAGE</span>
-            <span className="brand-caption">MOTOR COMPANY</span>
+    <div className="min-h-screen">
+      <aside className="fixed inset-y-0 left-0 z-[2] flex w-[248px] flex-col bg-[#20312e] px-[17px] pt-[29px] pb-[18px] text-[#f4f3ee] max-[1120px]:w-[220px] max-[760px]:relative max-[760px]:inset-auto max-[760px]:h-auto max-[760px]:min-h-16 max-[760px]:w-full max-[760px]:flex-row max-[760px]:items-center max-[760px]:px-4 max-[760px]:py-[9px]">
+        <a href="#" className="flex items-center gap-2.5 px-2 text-inherit no-underline max-[760px]:p-0 max-[480px]:gap-1.5" aria-label="Heritage Motors home" onClick={(event) => event.preventDefault()}>
+          <span className="grid h-[47px] w-[58px] place-items-center text-[#d99b6c] max-[760px]:h-[41px] max-[760px]:w-[47px]"><VintageCarMark /></span>
+          <span className="flex flex-col gap-px">
+            <span className="font-display text-[15px] leading-none font-extrabold tracking-[2.1px] max-[480px]:text-xs max-[480px]:tracking-[1.4px]">HERITAGE</span>
+            <span className="text-[8px] leading-[1.6] tracking-[2.1px] text-[#a9b4ae] max-[480px]:text-[7px] max-[480px]:tracking-[1.4px]">MOTOR COMPANY</span>
           </span>
         </a>
 
-        <div className="workspace-label">WORKSPACE</div>
-        <nav className="primary-nav" aria-label="Main navigation">
+        <div className="mx-3 mt-[52px] mb-[13px] text-[9px] font-bold tracking-[1.4px] text-[#82908a] max-[760px]:hidden">WORKSPACE</div>
+        <nav className="grid gap-[5px] max-[760px]:ml-auto max-[760px]:flex max-[760px]:gap-[3px] max-[480px]:gap-0" aria-label="Main navigation">
           {[
             ['Dashboard', 'grid'],
             ['Inventory', 'car'],
           ].map(([label, icon]) => (
             <button
-              className={`nav-item ${activeNav === label ? 'active' : ''}`}
+              className={navItemClass(activeNav === label)}
               key={label}
               onClick={() => setActiveNav(label)}
             >
+              {activeNav === label && (
+                <>
+                  <span className="absolute top-[calc(50%-11px)] -left-[17px] h-[22px] w-[3px] rounded-r-[3px] bg-[#d69a6c] max-[760px]:hidden" />
+                  <span className="absolute -bottom-[9px] left-[9px] right-[9px] hidden h-0.5 bg-[#d69a6c] max-[760px]:block max-[480px]:left-[5px] max-[480px]:right-[5px]" />
+                </>
+              )}
               <Icon name={icon} size={18} />
-              <span>{label}</span>
-              {label === 'Inventory' && <span className="nav-count">{vehicles.length}</span>}
+              <span className="max-[480px]:hidden">{label}</span>
+              {label === 'Inventory' && <span className="ml-auto grid h-[21px] min-w-6 place-items-center rounded-[5px] bg-[#40534d] px-1.5 text-[10px] text-[#d0d8d2] max-[760px]:hidden">{vehicles.length}</span>}
             </button>
           ))}
         </nav>
 
-        <div className="sidebar-bottom">
-          <div className="access-card">
-            <span className="access-icon"><Icon name="lock" size={16} /></span>
-            <span className="access-copy"><strong>Admin access</strong><small>Only you can manage listings</small></span>
-            <span className="access-indicator" />
+        <div className="mt-auto max-[760px]:hidden">
+          <div className="mx-0.5 mb-[17px] flex items-center gap-[9px] rounded-lg border border-[#3a4a45] px-[9px] py-3">
+            <span className="grid size-[29px] shrink-0 place-items-center rounded-[7px] bg-[#3c4842] text-[#d8a47d]"><Icon name="lock" size={16} /></span>
+            <span className="flex min-w-0 flex-col gap-[3px]"><strong className="text-[10.5px] font-semibold">Admin access</strong><small className="text-[9px] text-[#9ca9a2]">Only you can manage listings</small></span>
+            <span className="ml-auto size-1.5 shrink-0 self-start rounded-full bg-[#87b38f] shadow-[0_0_0_3px_#344b40]" />
           </div>
-          <div className="profile-row">
-            <span className="avatar">{initials}</span>
-            <span className="profile-copy"><strong>{fullName}</strong><small>{email}</small></span>
-            <button className="sign-out-button" onClick={signOut}>Sign out</button>
+          <div className="flex w-full items-center gap-2.5 border-t border-[#3a4945] px-[5px] pt-3.5 text-inherit">
+            <span className="grid size-[33px] shrink-0 place-items-center rounded-full bg-[#9c7053] font-display text-[10px] font-bold text-[#fbf5ed]">{initials}</span>
+            <span className="flex min-w-0 flex-1 flex-col gap-[3px]"><strong className="text-[10.5px] font-semibold">{fullName}</strong><small className="text-[9px] text-[#9ca9a2]">{email}</small></span>
+            <button className="ml-auto border-0 bg-transparent p-0 text-[9px] font-semibold text-[#c9b3a2] hover:text-white" onClick={signOut}>Sign out</button>
           </div>
         </div>
       </aside>
 
-      <main className="main-content">
-        <header className="topbar">
-          <div className="breadcrumb"><span>Workspace</span><Icon name="chevron" size={14} /><strong>{activeNav}</strong></div>
-          <div className="topbar-actions">
-            <span className="today-label">Monday, October 19, 2026</span>
-            <button className="icon-button notification-button" aria-label="Notifications">
-              <Icon name="bell" size={19} /><span className="notification-dot" />
+      <main className="ml-[248px] min-h-screen max-[1120px]:ml-[220px] max-[760px]:ml-0 max-[760px]:min-h-[calc(100vh_-_64px)]">
+        <header className="flex h-[65px] items-center justify-between border-b border-[#e9ece7] bg-white/72 px-12 min-[1500px]:px-[62px] max-[1120px]:px-[30px] max-[760px]:h-[51px] max-[760px]:px-[19px]">
+          <div className="flex items-center gap-2.5 text-[11px] text-[#9aa39e] max-[480px]:text-[9px]"><span>Workspace</span><Icon name="chevron" size={14} /><strong className="font-semibold text-[#4b5b55]">{activeNav}</strong></div>
+          <div className="flex items-center gap-[18px] max-[760px]:min-w-0 max-[760px]:gap-0">
+            <span className="shrink-0 text-[10px] whitespace-nowrap text-[#909b95] max-[1120px]:hidden">Monday, October 19, 2026</span>
+            <button className={`${iconButton} border-[#e9ece7]`} aria-label="Notifications">
+              <Icon name="bell" size={19} /><span className="absolute top-[7px] right-[7px] size-[5px] rounded-full border border-white bg-[#c87e58]" />
             </button>
-            <span className="topbar-divider" />
-            <span className="signed-in">
-              <span className="signed-in-copy"><strong>{fullName}</strong><span>{email}</span></span>
-              <span className="avatar top-avatar">{initials}</span>
+            <span className="h-[25px] w-px bg-[#e7eae5] max-[760px]:hidden" />
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="flex min-w-0 max-w-[220px] flex-col items-end gap-px overflow-hidden max-[760px]:max-w-[140px]"><strong className="max-w-full truncate text-[11px] font-semibold text-[#3d4c46] max-[760px]:hidden">{fullName}</strong><span className="max-w-full truncate text-[10px] text-[#8b9690]">{email}</span></span>
+              <span className="grid size-[29px] shrink-0 basis-[29px] place-items-center rounded-full bg-[#9c7053] font-display text-[9px] font-bold text-[#fbf5ed]">{initials}</span>
             </span>
           </div>
         </header>
 
-        <div className="page-wrap">
-          <section className="welcome-row">
+        <div className="mx-auto max-w-[1440px] px-12 pt-9 pb-[21px] min-[1500px]:px-[62px] max-[1120px]:px-[30px] max-[1120px]:pt-8 max-[1120px]:pb-5 max-[760px]:px-[19px] max-[760px]:pt-[27px] max-[760px]:pb-[18px] max-[480px]:px-[13px]">
+          <section className="flex items-end justify-between gap-5 max-[760px]:items-start max-[480px]:flex-col max-[480px]:items-start max-[480px]:gap-3.5">
             <div>
-              <div className="eyebrow"><span className="eyebrow-line" /> MONDAY, OCTOBER 19, 2026</div>
-              <h1>Good morning, {firstName} <span className="wave">✳</span></h1>
-              <p className="welcome-subtitle">Signed in as {email}</p>
+              <div className="flex items-center gap-2 text-[9px] font-bold tracking-[1.4px] text-[#9a765b] max-[480px]:text-[8px]"><span className="h-px w-[19px] bg-[#c99b77]" /> MONDAY, OCTOBER 19, 2026</div>
+              <h1 className="mt-2.5 font-display text-[27px] leading-[1.25] font-semibold tracking-[-0.8px] text-[#263430] max-[760px]:max-w-[370px] max-[760px]:text-[23px] max-[480px]:text-[22px]">Good morning, {firstName} <span className="inline-block rotate-[14deg] font-sans text-[19px] font-normal text-[#bc855e]">✳</span></h1>
+              <p className="mt-[7px] text-[11.5px] text-[#89948e] max-[760px]:max-w-[270px] max-[760px]:leading-normal">Signed in as {email}</p>
             </div>
-            <button className="button button-primary" onClick={openCreate}><Icon name="plus" size={18} /> Add a vehicle</button>
+            <button className={`${buttonPrimary} max-[760px]:min-h-[34px] max-[760px]:px-2.5 max-[760px]:text-[9px] max-[480px]:-mt-0.5 max-[480px]:self-end`} onClick={openCreate}><Icon name="plus" size={18} /> Add a vehicle</button>
           </section>
 
-          <section className="stats-grid" aria-label="Inventory overview">
-            <article className="stat-card">
-              <div className="stat-top"><span className="stat-icon sage"><Icon name="car" size={19} /></span><span className="stat-change"><span className="change-arrow">↗</span> 12.5%</span></div>
-              <div className="stat-value">{vehicles.length.toString().padStart(2, '0')}</div>
-              <div className="stat-label">Total vehicles <span>vs. last month</span></div>
-              <div className="stat-sparkline spark-green" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
+          <section className="mt-[26px] grid grid-cols-[1fr_1fr_1.15fr_1fr] gap-[13px] max-[1120px]:grid-cols-2 max-[760px]:mt-[22px] max-[760px]:gap-[9px]" aria-label="Inventory overview">
+            <article className={cn(statCard, statPad)}>
+              <div className="flex items-center justify-between"><span className="grid size-8 place-items-center rounded-[7px] bg-[#edf3ed] text-[#53715f] max-[480px]:size-[29px]"><Icon name="car" size={19} /></span><span className="inline-flex items-center gap-[3px] rounded bg-[#edf5ee] px-1.5 py-1 text-[9px] font-semibold text-[#588163] max-[480px]:px-1 max-[480px]:py-[3px] max-[480px]:text-[8px]"><span className="text-[11px]">↗</span> 12.5%</span></div>
+              <div className="relative z-[1] mt-3 font-display text-[26px] leading-none font-bold tracking-[-0.8px] text-[#293834] max-[760px]:text-[23px] max-[480px]:mt-2.5 max-[480px]:text-[21px]">{vehicles.length.toString().padStart(2, '0')}</div>
+              <div className="relative z-[1] mt-[5px] text-[10px] font-semibold text-[#59665f] max-[480px]:text-[9px]">Total vehicles <span className="ml-[3px] text-[9px] font-normal text-[#9da59f] max-[760px]:mt-1 max-[760px]:ml-0 max-[760px]:block max-[480px]:text-[8px]">vs. last month</span></div>
+              <Sparkline barClass="bg-[#b2c6b2]" />
             </article>
-            <article className="stat-card">
-              <div className="stat-top"><span className="stat-icon amber"><Icon name="check" size={19} /></span><span className="stat-change"><span className="change-arrow">↗</span> 8.2%</span></div>
-              <div className="stat-value">{chassisCount.toString().padStart(2, '0')}</div>
-              <div className="stat-label">Chassis recorded <span>in this collection</span></div>
-              <div className="stat-sparkline spark-amber" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
+            <article className={cn(statCard, statPad)}>
+              <div className="flex items-center justify-between"><span className="grid size-8 place-items-center rounded-[7px] bg-[#f8f0e8] text-[#a8784d] max-[480px]:size-[29px]"><Icon name="check" size={19} /></span><span className="inline-flex items-center gap-[3px] rounded bg-[#edf5ee] px-1.5 py-1 text-[9px] font-semibold text-[#588163] max-[480px]:px-1 max-[480px]:py-[3px] max-[480px]:text-[8px]"><span className="text-[11px]">↗</span> 8.2%</span></div>
+              <div className="relative z-[1] mt-3 font-display text-[26px] leading-none font-bold tracking-[-0.8px] text-[#293834] max-[760px]:text-[23px] max-[480px]:mt-2.5 max-[480px]:text-[21px]">{chassisCount.toString().padStart(2, '0')}</div>
+              <div className="relative z-[1] mt-[5px] text-[10px] font-semibold text-[#59665f] max-[480px]:text-[9px]">Chassis recorded <span className="ml-[3px] text-[9px] font-normal text-[#9da59f] max-[760px]:mt-1 max-[760px]:ml-0 max-[760px]:block max-[480px]:text-[8px]">in this collection</span></div>
+              <Sparkline barClass="bg-[#ddc29f]" />
             </article>
-            <article className="stat-card">
-              <div className="stat-top"><span className="stat-icon rose"><Icon name="chart" size={19} /></span><span className="stat-change muted-change">Portfolio</span></div>
-              <div className="stat-value">{countryCount.toString().padStart(2, '0')}</div>
-              <div className="stat-label">Countries of origin <span>in this collection</span></div>
-              <div className="stat-sparkline spark-rose" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /></div>
+            <article className={cn(statCard, statPad)}>
+              <div className="flex items-center justify-between"><span className="grid size-8 place-items-center rounded-[7px] bg-[#f6eeeb] text-[#9f695d] max-[480px]:size-[29px]"><Icon name="chart" size={19} /></span><span className="inline-flex items-center gap-[3px] rounded bg-[#f5f3ed] px-1.5 py-1 text-[9px] font-medium text-[#99917f] max-[480px]:px-1 max-[480px]:py-[3px] max-[480px]:text-[8px]">Portfolio</span></div>
+              <div className="relative z-[1] mt-3 font-display text-[26px] leading-none font-bold tracking-[-0.8px] text-[#293834] max-[760px]:text-[23px] max-[480px]:mt-2.5 max-[480px]:text-[21px]">{countryCount.toString().padStart(2, '0')}</div>
+              <div className="relative z-[1] mt-[5px] text-[10px] font-semibold text-[#59665f] max-[480px]:text-[9px]">Countries of origin <span className="ml-[3px] text-[9px] font-normal text-[#9da59f] max-[760px]:mt-1 max-[760px]:ml-0 max-[760px]:block max-[480px]:text-[8px]">in this collection</span></div>
+              <Sparkline barClass="bg-[#dab7a9]" />
             </article>
-            <article className="stat-card stat-card-note">
-              <div className="note-top"><span className="note-overline">THE COLLECTION</span><span className="note-sun">✳</span></div>
-              <p>“The best journeys are measured in stories, not miles.”</p>
-              <span className="note-author">— A thought for the road</span>
-              <div className="note-road" aria-hidden="true"><span /></div>
+            <article className={cn(statCard, 'border-[#edece3] bg-[#edece3] px-[18px] py-[17px] max-[760px]:p-[13px] max-[480px]:px-3 max-[480px]:py-[13px]')}>
+              <div className="flex items-center justify-between"><span className="text-[8px] font-bold tracking-[1.1px] text-[#928c77]">THE COLLECTION</span><span className="text-[19px] text-[#b98a59]">✳</span></div>
+              <p className="mt-3 max-w-[208px] font-display text-xs leading-[1.55] font-medium text-[#47524b] max-[1120px]:max-w-[260px] max-[480px]:text-[10px]">“The best journeys are measured in stories, not miles.”</p>
+              <span className="mt-1.5 block text-[8.5px] text-[#968f7b]">— A thought for the road</span>
+              <div className="absolute inset-x-0 bottom-0 h-[3px] bg-[repeating-linear-gradient(90deg,#b58a60_0_15px,transparent_15px_21px)] opacity-60" aria-hidden="true" />
             </article>
           </section>
 
-          <section className="inventory-section">
-            <div className="section-heading">
+          <section className="mt-8 rounded-lg border border-[#e8ebe6] bg-white px-[22px] pt-[23px] shadow-[0_3px_12px_#283b2f04] max-[760px]:mt-[22px] max-[760px]:px-3.5 max-[760px]:pt-[18px] max-[480px]:px-2.5">
+            <div className="flex items-center justify-between gap-[15px]">
               <div>
-                <div className="section-kicker">YOUR COLLECTION</div>
-                <h2>{activeNav === 'Dashboard' ? 'Vehicle inventory' : activeNav}</h2>
-                <p>A considered collection, carefully cared for.</p>
+                <div className="text-[8px] font-bold tracking-[1.2px] text-[#a18165]">YOUR COLLECTION</div>
+                <h2 className="mt-[5px] font-display text-lg leading-[1.3] font-semibold tracking-[-0.4px] text-[#2d3b36] max-[760px]:text-base">{activeNav === 'Dashboard' ? 'Vehicle inventory' : activeNav}</h2>
+                <p className="mt-1 text-[10.5px] text-[#909b95] max-[760px]:text-[9px]">A considered collection, carefully cared for.</p>
               </div>
-              <button className="button button-outline" onClick={openCreate}><Icon name="plus" size={17} /> Add vehicle</button>
+              <button className={`${buttonOutline} max-[760px]:min-h-[33px] max-[760px]:px-[9px] max-[760px]:text-[9px]`} onClick={openCreate}><Icon name="plus" size={17} /> Add vehicle</button>
             </div>
 
-            {notice && <div className="setup-banner" role="status">{notice}</div>}
-            <div className="inventory-toolbar">
-              <label className="search-box">
+            {notice && <div className="mt-4 rounded-lg border border-[#ead9c2] bg-[#fbf6ef] px-3.5 py-3 text-xs leading-normal text-[#6a5340]" role="status">{notice}</div>}
+            <div className="mt-5 flex items-center justify-between gap-3.5 border-b border-[#eff1ee] pb-[15px] max-[760px]:mt-[15px] max-[480px]:flex-col max-[480px]:items-stretch">
+              <label className="flex h-[35px] w-[min(330px,48%)] items-center gap-2 rounded-[5px] border border-[#e8ebe7] bg-white px-[9px] text-[#96a09a] max-[760px]:w-[min(230px,55%)] max-[480px]:w-full">
                 <Icon name="search" size={18} />
-                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search vehicles..." aria-label="Search vehicles" />
-                <kbd>⌘ K</kbd>
+                <input className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[10px] text-[#47554e] outline-none placeholder:text-[#a9b0ab]" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search vehicles..." aria-label="Search vehicles" />
+                <kbd className="rounded-[3px] border border-[#e7eae6] bg-[#fafbf9] px-1 py-0.5 font-sans text-[9px] text-[#9da69f] max-[760px]:hidden">⌘ K</kbd>
               </label>
-              <div className="toolbar-right">
-                <button className="button button-light" onClick={() => setQuery('')}>Reset</button>
+              <div className="flex items-center gap-2 max-[760px]:gap-[5px] max-[480px]:justify-end">
+                <button className={buttonToolbar} onClick={() => setQuery('')}>Reset</button>
               </div>
             </div>
 
-            <div className="table-wrap">
-              <table className="inventory-table">
-                <thead>
+            <div className="w-full overflow-x-auto">
+              <table className="w-full min-w-[980px] border-collapse text-left whitespace-nowrap">
+                <thead className="text-[8px] font-bold tracking-[0.8px] text-[#9ba49e] [&_th]:h-[38px] [&_th]:font-bold">
                   <tr>
-                    <th className="actions-col">ACTIONS</th>
+                    <th className="sticky left-0 z-[2] min-w-[108px] bg-white shadow-[10px_0_14px_-12px_#283b2f33]">ACTIONS</th>
                     <th>DATE</th>
                     <th>MAKE / BODY TYPE</th>
                     <th>MODEL</th>
@@ -357,10 +408,10 @@ function App({ user }) {
                 </thead>
                 <tbody>
                   {visibleVehicles.map((vehicle) => (
-                    <tr key={vehicle.id}>
-                      <td className="actions-col">
+                    <tr className="group border-t border-[#f0f2ef] transition-colors duration-150 hover:bg-[#fcfdfa]" key={vehicle.id}>
+                      <td className={cn(td, 'sticky left-0 z-[1] min-w-[108px] bg-white shadow-[10px_0_14px_-12px_#283b2f33] group-hover:bg-[#fcfdfa]')}>
                         <button
-                          className="actions-button"
+                          className="inline-flex h-[30px] items-center gap-1.5 rounded-[5px] border border-[#e3e8e1] bg-white px-2.5 text-[10px] font-semibold text-[#3f4e47] hover:border-[#cbd6cd] hover:bg-[#f7faf6] aria-expanded:border-[#cbd6cd] aria-expanded:bg-[#f7faf6]"
                           aria-haspopup="menu"
                           aria-expanded={actionMenu?.vehicle.id === vehicle.id}
                           aria-label={`Actions for ${vehicle.makeBody}`}
@@ -369,86 +420,86 @@ function App({ user }) {
                           Actions <Icon name="down" size={13} />
                         </button>
                       </td>
-                      <td className="table-muted">{vehicle.date}</td>
-                      <td>
-                        <div className="vehicle-info">
-                          <strong>{vehicle.makeBody}</strong>
-                          {vehicle.remarks && <span>{vehicle.remarks}</span>}
+                      <td className={cn(td, 'text-[#727f77]')}>{vehicle.date}</td>
+                      <td className={cn(td, 'text-[#506058]')}>
+                        <div className="flex flex-col gap-[5px]">
+                          <strong className="text-[10.5px] font-semibold text-[#34433d]">{vehicle.makeBody}</strong>
+                          {vehicle.remarks && <span className="flex items-center gap-1.5 text-[8.5px] text-[#9aa49d]">{vehicle.remarks}</span>}
                         </div>
                       </td>
-                      <td className="table-muted">{vehicle.model}</td>
-                      <td className="table-muted">{vehicle.country}</td>
-                      <td className="table-muted">{vehicle.chassisNo}</td>
-                      <td className="table-muted">{vehicle.engineNo || '—'}</td>
-                      <td className="table-muted">{vehicle.color}</td>
+                      <td className={cn(td, 'text-[#727f77]')}>{vehicle.model}</td>
+                      <td className={cn(td, 'text-[#727f77]')}>{vehicle.country}</td>
+                      <td className={cn(td, 'text-[#727f77]')}>{vehicle.chassisNo}</td>
+                      <td className={cn(td, 'text-[#727f77]')}>{vehicle.engineNo || '—'}</td>
+                      <td className={cn(td, 'text-[#727f77]')}>{vehicle.color}</td>
                     </tr>
                   ))}
                   {visibleVehicles.length === 0 && (
-                    <tr><td colSpan="8"><div className="empty-state"><span className="empty-icon"><Icon name="car" size={22} /></span><strong>{loading ? 'Loading vehicles' : 'No vehicles found'}</strong><span>{loading ? 'Reading records from Supabase.' : 'Add a vehicle to your collection.'}</span>{!loading && <button onClick={openCreate}>Add a vehicle <Icon name="arrow" size={15} /></button>}</div></td></tr>
+                    <tr><td className={td} colSpan="8"><div className="flex flex-col items-center gap-2 px-2.5 py-8 text-center whitespace-normal text-[#929e96]"><span className="mb-0.5 grid size-[41px] place-items-center rounded-full bg-[#edf2ed] text-[#718577]"><Icon name="car" size={22} /></span><strong className="text-xs text-[#46554c]">{loading ? 'Loading vehicles' : 'No vehicles found'}</strong><span className="text-[10px]">{loading ? 'Reading records from Supabase.' : 'Add a vehicle to your collection.'}</span>{!loading && <button className="inline-flex items-center gap-1.5 bg-transparent p-[5px] text-[9px] font-semibold text-[#597965] hover:text-[#31473a]" onClick={openCreate}>Add a vehicle <Icon name="arrow" size={15} /></button>}</div></td></tr>
                   )}
                 </tbody>
               </table>
             </div>
-            <div className="table-footer">
-              <span>Showing <strong>{visibleVehicles.length ? 1 : 0}–{visibleVehicles.length}</strong> of <strong>{vehicles.length}</strong> vehicles</span>
-              <button className="view-all-button" onClick={() => setQuery('')}>View all vehicles <Icon name="arrow" size={15} /></button>
+            <div className="flex min-h-[47px] items-center justify-between border-t border-[#eef0ed] text-[9px] text-[#9aa39d] max-[480px]:text-[8px]">
+              <span>Showing <strong className="font-semibold text-[#6e7b73]">{visibleVehicles.length ? 1 : 0}–{visibleVehicles.length}</strong> of <strong className="font-semibold text-[#6e7b73]">{vehicles.length}</strong> vehicles</span>
+              <button className="inline-flex items-center gap-1.5 bg-transparent py-[5px] pr-0 pl-2 text-[9px] font-semibold text-[#65786b] hover:text-[#31473a] max-[480px]:text-[8px]" onClick={() => setQuery('')}>View all vehicles <Icon name="arrow" size={15} /></button>
             </div>
           </section>
-          <footer className="page-footer"><span>© 2026 Heritage Motor Company</span><span><i /> Your collection is looking good</span></footer>
+          <footer className="flex justify-between px-0.5 pt-[17px] text-[9px] text-[#a0a9a2] max-[760px]:text-[8px] max-[480px]:gap-2.5"><span>© 2026 Heritage Motor Company</span><span className="flex items-center gap-1.5"><i className="size-[5px] rounded-full bg-[#81a487]" /> Your collection is looking good</span></footer>
         </div>
       </main>
 
       {modal?.type === 'vehicle' && (
-        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null) }}>
-          <section className="modal-card vehicle-modal" role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title">
-            <div className="modal-header">
-              <div><span className="section-kicker">{modal.vehicleId ? 'UPDATE VEHICLE' : 'NEW VEHICLE'}</span><h2 id="vehicle-modal-title">{modal.vehicleId ? 'Edit vehicle' : 'Add a vehicle'}</h2><p>Private inventory details for this collection.</p></div>
-              <button className="icon-button modal-close" onClick={() => setModal(null)} aria-label="Close"><Icon name="close" size={19} /></button>
+        <div className={backdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null) }}>
+          <section className={formModal} role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title">
+            <div className="mb-[22px] flex justify-between gap-[15px] max-[480px]:mb-[17px]">
+              <div><span className="text-[8px] font-bold tracking-[1.2px] text-[#a18165]">{modal.vehicleId ? 'UPDATE VEHICLE' : 'NEW VEHICLE'}</span><h2 className="mt-1.5 font-display text-xl leading-[1.3] font-semibold tracking-[-0.4px] text-[#2d3b36]" id="vehicle-modal-title">{modal.vehicleId ? 'Edit vehicle' : 'Add a vehicle'}</h2><p className="mt-1 text-[10.5px] text-[#909b95]">Private inventory details for this collection.</p></div>
+              <button className={`${iconButton} border-[#ecefea]`} onClick={() => setModal(null)} aria-label="Close"><Icon name="close" size={19} /></button>
             </div>
             <form onSubmit={saveVehicle}>
-              <div className="form-grid">
-                <label className="form-field"><span>Date</span><input required value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} placeholder="08/09/2026" /></label>
-                <label className="form-field"><span>Make / Body Type</span><input required value={form.makeBody} onChange={(event) => setForm({ ...form, makeBody: event.target.value })} placeholder="LEXUS - LS460 (Sedan)" /></label>
-                <label className="form-field"><span>Model</span><input required value={form.model} onChange={(event) => setForm({ ...form, model: event.target.value })} placeholder="2014" /></label>
-                <label className="form-field"><span>Country</span><input required value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder="Japan" /></label>
-                <label className="form-field"><span>Chassis No</span><input required value={form.chassisNo} onChange={(event) => setForm({ ...form, chassisNo: event.target.value })} placeholder="Chassis number" /></label>
-                <label className="form-field"><span>Engine No <em>optional</em></span><input value={form.engineNo} onChange={(event) => setForm({ ...form, engineNo: event.target.value })} placeholder="Engine number" /></label>
-                <label className="form-field"><span>Color</span><input required value={form.color} onChange={(event) => setForm({ ...form, color: event.target.value })} placeholder="Gray" /></label>
-                <label className="form-field span-2"><span>Remarks <em>optional</em></span><textarea value={form.remarks} onChange={(event) => setForm({ ...form, remarks: event.target.value })} placeholder="Notes" /></label>
+              <div className="grid grid-cols-2 gap-x-[13px] gap-y-[15px] max-[480px]:grid-cols-1 max-[480px]:gap-[11px]">
+                <label className={field}><span>Date</span><input className={control} required value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} placeholder="08/09/2026" /></label>
+                <label className={field}><span>Make / Body Type</span><input className={control} required value={form.makeBody} onChange={(event) => setForm({ ...form, makeBody: event.target.value })} placeholder="LEXUS - LS460 (Sedan)" /></label>
+                <label className={field}><span>Model</span><input className={control} required value={form.model} onChange={(event) => setForm({ ...form, model: event.target.value })} placeholder="2014" /></label>
+                <label className={field}><span>Country</span><input className={control} required value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder="Japan" /></label>
+                <label className={field}><span>Chassis No</span><input className={control} required value={form.chassisNo} onChange={(event) => setForm({ ...form, chassisNo: event.target.value })} placeholder="Chassis number" /></label>
+                <label className={field}><span>Engine No <em className={optional}>optional</em></span><input className={control} value={form.engineNo} onChange={(event) => setForm({ ...form, engineNo: event.target.value })} placeholder="Engine number" /></label>
+                <label className={field}><span>Color</span><input className={control} required value={form.color} onChange={(event) => setForm({ ...form, color: event.target.value })} placeholder="Gray" /></label>
+                <label className={cn(field, 'col-span-2 max-[480px]:col-span-1')}><span>Remarks <em className={optional}>optional</em></span><textarea className={area} value={form.remarks} onChange={(event) => setForm({ ...form, remarks: event.target.value })} placeholder="Notes" /></label>
               </div>
-              <div className="modal-actions"><button type="button" className="button button-light" onClick={() => setModal(null)} disabled={saving}>Cancel</button><button type="submit" className="button button-primary" disabled={saving}>{modal.vehicleId ? 'Save changes' : <><Icon name="plus" size={17} /> Add vehicle</>}</button></div>
+              <div className="mt-[22px] flex justify-end gap-2 border-t border-[#eef0ed] pt-4"><button type="button" className={buttonLight} onClick={() => setModal(null)} disabled={saving}>Cancel</button><button type="submit" className={buttonPrimary} disabled={saving}>{modal.vehicleId ? 'Save changes' : <><Icon name="plus" size={17} /> Add vehicle</>}</button></div>
             </form>
           </section>
         </div>
       )}
 
       {modal?.type === 'view' && (
-        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null) }}>
-          <section className="modal-card vehicle-modal" role="dialog" aria-modal="true" aria-labelledby="view-title">
-            <div className="modal-header">
-              <div><span className="section-kicker">VEHICLE</span><h2 id="view-title">{modal.vehicle.makeBody || 'Vehicle'}</h2></div>
-              <button className="icon-button modal-close" onClick={() => setModal(null)} aria-label="Close"><Icon name="close" size={19} /></button>
+        <div className={backdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null) }}>
+          <section className={formModal} role="dialog" aria-modal="true" aria-labelledby="view-title">
+            <div className="mb-[22px] flex justify-between gap-[15px] max-[480px]:mb-[17px]">
+              <div><span className="text-[8px] font-bold tracking-[1.2px] text-[#a18165]">VEHICLE</span><h2 className="mt-1.5 font-display text-xl leading-[1.3] font-semibold tracking-[-0.4px] text-[#2d3b36]" id="view-title">{modal.vehicle.makeBody || 'Vehicle'}</h2></div>
+              <button className={`${iconButton} border-[#ecefea]`} onClick={() => setModal(null)} aria-label="Close"><Icon name="close" size={19} /></button>
             </div>
-            <dl className="detail-list">
+            <dl className="m-0 grid gap-3">
               {detailFields.map(([key, label]) => (
-                <div key={key}>
-                  <dt>{label}</dt>
-                  <dd>{modal.vehicle[key] || '—'}</dd>
+                <div className="grid grid-cols-[140px_1fr] gap-3" key={key}>
+                  <dt className="text-xs text-[#809087]">{label}</dt>
+                  <dd className="m-0 text-sm font-semibold text-[#2d3b36]">{modal.vehicle[key] || '—'}</dd>
                 </div>
               ))}
             </dl>
-            <div className="modal-actions"><button className="button button-light" onClick={() => setModal(null)}>Close</button></div>
+            <div className="mt-[22px] flex justify-end gap-2 border-t border-[#eef0ed] pt-4"><button className={buttonLight} onClick={() => setModal(null)}>Close</button></div>
           </section>
         </div>
       )}
 
       {modal?.type === 'delete' && (
-        <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null) }}>
-          <section className="modal-card delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-title">
-            <span className="delete-icon"><Icon name="trash" size={20} /></span>
-            <h2 id="delete-title">Remove this vehicle?</h2>
-            <p><strong>{modal.vehicle.makeBody}</strong> will be removed from your collection. This action cannot be undone.</p>
-            <div className="modal-actions"><button className="button button-light" onClick={() => setModal(null)} disabled={saving}>Keep vehicle</button><button className="button button-danger" onClick={() => deleteVehicle(modal.vehicle.id)} disabled={saving}>Remove vehicle</button></div>
+        <div className={backdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null) }}>
+          <section className={deleteModalClass} role="alertdialog" aria-modal="true" aria-labelledby="delete-title">
+            <span className="grid size-[39px] place-items-center rounded-lg bg-[#f8efed] text-[#a5554b]"><Icon name="trash" size={20} /></span>
+            <h2 className="mt-4 font-display text-[17px] font-semibold text-[#2c3a34]" id="delete-title">Remove this vehicle?</h2>
+            <p className="mt-2 text-[11px] leading-[1.65] text-[#7e8982]"><strong className="font-semibold text-[#56645c]">{modal.vehicle.makeBody}</strong> will be removed from your collection. This action cannot be undone.</p>
+            <div className="mt-[22px] flex justify-end gap-2 border-t border-[#eef0ed] pt-4"><button className={buttonLight} onClick={() => setModal(null)} disabled={saving}>Keep vehicle</button><button className={buttonDanger} onClick={() => deleteVehicle(modal.vehicle.id)} disabled={saving}>Remove vehicle</button></div>
           </section>
         </div>
       )}
@@ -463,17 +514,17 @@ function App({ user }) {
 
       {actionMenu && (
         <>
-          <button className="menu-backdrop" aria-label="Close actions" onClick={() => setActionMenu(null)} />
-          <div className="action-menu" role="menu" style={{ top: actionMenu.top, left: actionMenu.left }}>
-            <button role="menuitem" onClick={() => openView(actionMenu.vehicle)}><Icon name="eye" size={15} /> View</button>
-            <button role="menuitem" onClick={() => openQr(actionMenu.vehicle)}><Icon name="qr" size={15} /> QR code</button>
-            <button role="menuitem" onClick={() => openEdit(actionMenu.vehicle)}><Icon name="edit" size={15} /> Edit</button>
-            <button role="menuitem" className="danger" onClick={() => openDelete(actionMenu.vehicle)}><Icon name="trash" size={15} /> Delete</button>
+          <button className="fixed inset-0 z-[6] border-0 bg-transparent" aria-label="Close actions" onClick={() => setActionMenu(null)} />
+          <div className="fixed z-[7] min-w-[148px] rounded-lg border border-[#e6ebe4] bg-white p-[5px] shadow-[0_12px_32px_#16251f24]" role="menu" style={{ top: actionMenu.top, left: actionMenu.left }}>
+            <button className="flex h-8 w-full items-center gap-2 rounded-[5px] border-0 bg-transparent px-2 text-left text-[11px] font-semibold text-[#3f4e47] hover:bg-[#f4f7f3]" role="menuitem" onClick={() => openView(actionMenu.vehicle)}><Icon name="eye" size={15} /> View</button>
+            <button className="flex h-8 w-full items-center gap-2 rounded-[5px] border-0 bg-transparent px-2 text-left text-[11px] font-semibold text-[#3f4e47] hover:bg-[#f4f7f3]" role="menuitem" onClick={() => openQr(actionMenu.vehicle)}><Icon name="qr" size={15} /> QR code</button>
+            <button className="flex h-8 w-full items-center gap-2 rounded-[5px] border-0 bg-transparent px-2 text-left text-[11px] font-semibold text-[#3f4e47] hover:bg-[#f4f7f3]" role="menuitem" onClick={() => openEdit(actionMenu.vehicle)}><Icon name="edit" size={15} /> Edit</button>
+            <button className="flex h-8 w-full items-center gap-2 rounded-[5px] border-0 bg-transparent px-2 text-left text-[11px] font-semibold text-[#a35248] hover:bg-[#f8efed]" role="menuitem" onClick={() => openDelete(actionMenu.vehicle)}><Icon name="trash" size={15} /> Delete</button>
           </div>
         </>
       )}
 
-      {toast && <div className="toast" role="status"><span><Icon name="check" size={16} /></span>{toast}</div>}
+      {toast && <div className="fixed right-[25px] bottom-6 z-[7] flex animate-rise items-center gap-[9px] rounded-[7px] border border-[#dce8dd] bg-white py-[11px] pr-[15px] pl-[11px] text-[11px] text-[#3f5146] shadow-[0_6px_25px_#263b2a19]" role="status"><span className="grid size-[23px] place-items-center rounded-full bg-[#edf5ee] text-[#588367]"><Icon name="check" size={16} /></span>{toast}</div>}
     </div>
   )
 }
@@ -511,9 +562,9 @@ function QRCodeDialog({ vehicle, value, onClose }) {
   }, [onClose])
 
   return (
-    <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <section className="modal-card qr-modal" role="dialog" aria-modal="true" aria-label={`QR code for ${vehicle.makeBody || 'vehicle record'}`}>
-        {image && <img className="qr-image" src={image} alt={`QR code for ${vehicle.makeBody || 'vehicle record'}`} />}
+    <div className={backdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <section className={qrModalClass} role="dialog" aria-modal="true" aria-label={`QR code for ${vehicle.makeBody || 'vehicle record'}`}>
+        {image && <img className="block h-auto w-[min(280px,100%)] [image-rendering:pixelated]" src={image} alt={`QR code for ${vehicle.makeBody || 'vehicle record'}`} />}
         {error && <span className="sr-only" role="alert">{error}</span>}
       </section>
     </div>
