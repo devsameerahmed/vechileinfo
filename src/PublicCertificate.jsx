@@ -60,10 +60,10 @@ function PublicCertificate({ publicKey }) {
     }))
     : []
 
-  const cell = 'h-auto border border-[#d7d7d7] px-2 py-[11px] align-middle text-sm tracking-normal max-[720px]:px-1.5 max-[720px]:py-2.5 max-[720px]:text-[13.5px]'
+  const bodyCell = 'border border-[#d7d7d7] px-2 py-[11px] align-middle text-sm leading-tight tracking-normal max-[720px]:px-1.5 max-[720px]:py-2.5 max-[720px]:text-[13.5px]'
 
   return (
-    <main className="m-0 min-h-screen w-full max-w-none bg-white font-certificate text-[#333]">
+    <main className="min-h-screen w-full max-w-none bg-white font-certificate text-[#333]">
       <div className="mx-auto w-full max-w-[430px] px-3 pt-[34px] pb-12 max-[720px]:px-2.5 max-[720px]:pt-7 max-[720px]:pb-10">
         <h1 className="m-0 max-w-none text-center font-certificate text-[26px] leading-[1.25] font-medium tracking-normal text-[#2a2a2a] max-[720px]:text-2xl">Vehicle Certificate Details</h1>
         <p className="mt-2 mb-[18px] text-center font-arabic text-2xl leading-[1.4] font-medium text-[#2a2a2a] max-[720px]:text-[22px]" lang="ar" dir="rtl">
@@ -84,19 +84,28 @@ function PublicCertificate({ publicKey }) {
             </colgroup>
             <thead>
               <tr>
-                <th className="h-[34px] border border-x-[#efe4cc] border-y-[#c5a15a] bg-[#c5a15a] p-0" />
-                <th className="h-[34px] border border-x-[#efe4cc] border-y-[#c5a15a] bg-[#c5a15a] p-0" />
-                <th className="h-[34px] border border-x-[#efe4cc] border-y-[#c5a15a] bg-[#c5a15a] p-0" />
+                <th className="h-[34px] border border-[#c5a15a] border-x-[#efe4cc] bg-[#c5a15a] p-0" />
+                <th className="h-[34px] border border-[#c5a15a] border-x-[#efe4cc] bg-[#c5a15a] p-0" />
+                <th className="h-[34px] border border-[#c5a15a] border-x-[#efe4cc] bg-[#c5a15a] p-0" />
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
                 <tr key={row.label}>
-                  <th className={`${cell} text-left font-certificate leading-[1.25] font-normal text-[#3a3a3a]`} scope="row">{row.label}</th>
-                  <td className={`${cell} text-center font-certificate leading-[1.25] font-bold text-[#111]`}>
+                  <th
+                    className={`${bodyCell} text-left font-certificate font-normal text-[#3a3a3a]`}
+                    scope="row"
+                  >
+                    {row.label}
+                  </th>
+                  <td className={`${bodyCell} text-center font-certificate font-bold text-[#111]`}>
                     <CellValue value={row.value} status={row.status} />
                   </td>
-                  <td className={`${cell} text-right font-arabic leading-[1.45] font-medium text-[#333]`} lang="ar" dir="rtl">
+                  <td
+                    className={`${bodyCell} text-right font-arabic leading-[1.45] font-medium text-[#333]`}
+                    lang="ar"
+                    dir="rtl"
+                  >
                     {row.arabic}
                   </td>
                 </tr>
