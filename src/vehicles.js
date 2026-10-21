@@ -23,14 +23,19 @@ export function fromRow(row) {
   return {
     id: row.id,
     publicKey: row.public_key || '',
+    certificateNumber: row.certificate_number || '',
     date: row.certificate_date || '',
     makeBody: row.make_body || '',
+    importerName: row.importer_name || '',
+    declarationNumber: row.declaration_number || '',
     model: row.model || '',
     country: row.country || '',
     chassisNo: row.chassis_no || '',
     engineNo: row.engine_no || '',
     color: row.color || '',
     remarks: row.remarks || '',
+    userId: row.user_id || '',
+    status: row.status || '',
   }
 }
 
@@ -111,7 +116,7 @@ export async function removeVehicle(id) {
   if (error) throw error
 }
 
-const publicVehicleColumns = 'public_key, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks'
+const publicVehicleColumns = 'public_key, certificate_number, certificate_date, make_body, importer_name, declaration_number, model, country, chassis_no, engine_no, color, remarks, user_id, status'
 
 export async function loadPublicVehicle(publicKey) {
   const rpc = await supabase.rpc('get_public_vehicle_certificate', {

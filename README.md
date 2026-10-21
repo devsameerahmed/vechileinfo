@@ -3,7 +3,7 @@
 ## Setup
 
 1. Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-2. Run [`supabase/vehicle_certificates.sql`](./supabase/vehicle_certificates.sql) in the Supabase SQL editor. This creates the vehicle table and the restricted public-record lookup function.
+2. Run [`supabase/vehicle_certificates.sql`](./supabase/vehicle_certificates.sql) in the Supabase SQL editor. This creates the vehicle table and the restricted public-record lookup function required for QR scans to show records without signing in.
 3. Start the app with `npm run dev`.
 
 ## Public vehicle QR codes

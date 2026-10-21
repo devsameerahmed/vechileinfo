@@ -53,16 +53,23 @@ create policy "Dashboard can delete a vehicle certificate"
   to authenticated
   using (true);
 
-create or replace function public.get_public_vehicle_certificate(lookup_key text)
+drop function if exists public.get_public_vehicle_certificate(text);
+
+create function public.get_public_vehicle_certificate(lookup_key text)
 returns table (
+  certificate_number text,
   certificate_date text,
   make_body text,
+  importer_name text,
+  declaration_number text,
   model text,
   country text,
   chassis_no text,
   engine_no text,
   color text,
-  remarks text
+  remarks text,
+  user_id text,
+  status text
 )
 language sql
 stable
@@ -70,14 +77,19 @@ security definer
 set search_path = public, pg_temp
 as $$
   select
+    certificate.certificate_number,
     certificate.certificate_date,
     certificate.make_body,
+    certificate.importer_name,
+    certificate.declaration_number,
     certificate.model,
     certificate.country,
     certificate.chassis_no,
     certificate.engine_no,
     certificate.color,
-    certificate.remarks
+    certificate.remarks,
+    certificate.user_id,
+    certificate.status
   from public.vehicle_certificates as certificate
   where certificate.public_key = lookup_key
   limit 1;
@@ -85,3 +97,4 @@ $$;
 
 revoke all on function public.get_public_vehicle_certificate(text) from public;
 grant execute on function public.get_public_vehicle_certificate(text) to anon, authenticated;
+notify pgrst, 'reload schema';

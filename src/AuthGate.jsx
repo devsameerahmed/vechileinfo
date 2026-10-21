@@ -26,7 +26,7 @@ function AuthGate() {
   const publicRecordMatch = window.location.pathname.match(/^\/certificate\/([a-f0-9]+)\/?$/i)
 
   if (publicRecordMatch) {
-    return <PublicCertificate publicKey={publicRecordMatch[1]} user={session?.user} />
+    return <PublicCertificate publicKey={publicRecordMatch[1]} />
   }
 
   if (session === undefined) {
