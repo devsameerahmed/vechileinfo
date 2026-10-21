@@ -16,11 +16,6 @@ function Icon({ name, size = 18, strokeWidth = 1.8 }) {
     'aria-hidden': true,
   }
 
-  function openQr(vehicle) {
-    setActionMenu(null)
-    setQrVehicle(vehicle)
-  }
-
   const paths = {
     grid: <><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></>,
     car: <><path d="m5 11 1.4-4.2A2.5 2.5 0 0 1 8.8 5h6.4a2.5 2.5 0 0 1 2.4 1.8L19 11" /><path d="M3.5 11.5h17v6h-17z" /><path d="M6 17.5v2M18 17.5v2M3.5 14h17" /><circle cx="7.5" cy="14.5" r=".7" fill="currentColor" /><circle cx="16.5" cy="14.5" r=".7" fill="currentColor" /></>,
@@ -156,6 +151,7 @@ function App({ user }) {
   const qrUrl = qrVehicle?.publicKey
     ? new URL(`/certificate/${encodeURIComponent(qrVehicle.publicKey)}`, window.location.origin).toString()
     : ''
+  const qrValue = qrUrl
 
   function openCreate() {
     setForm(blankVehicle)
@@ -171,6 +167,11 @@ function App({ user }) {
   function openView(vehicle) {
     setActionMenu(null)
     setModal({ type: 'view', vehicle })
+  }
+
+  function openQr(vehicle) {
+    setActionMenu(null)
+    setQrVehicle(vehicle)
   }
 
   function openDelete(vehicle) {
@@ -455,7 +456,7 @@ function App({ user }) {
       {qrVehicle && (
         <QRCodeDialog
           vehicle={qrVehicle}
-          url={qrUrl}
+          value={qrValue}
           onClose={() => setQrVehicle(null)}
         />
       )}
@@ -477,13 +478,19 @@ function App({ user }) {
   )
 }
 
-function QRCodeDialog({ vehicle, url, onClose }) {
+function QRCodeDialog({ vehicle, value, onClose }) {
   const [image, setImage] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (!value) {
+      setImage('')
+      setError('This vehicle does not have details to encode yet.')
+      return undefined
+    }
     let active = true
-    QRCode.toDataURL(url, { width: 240, margin: 2, errorCorrectionLevel: 'M' })
+    setError('')
+    QRCode.toDataURL(value, { width: 280, margin: 2, errorCorrectionLevel: 'M' })
       .then((dataUrl) => {
         if (active) setImage(dataUrl)
       })
@@ -493,22 +500,21 @@ function QRCodeDialog({ vehicle, url, onClose }) {
     return () => {
       active = false
     }
-  }, [url])
+  }, [value])
+
+  useEffect(() => {
+    function closeOnEscape(event) {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [onClose])
 
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <section className="modal-card qr-modal" role="dialog" aria-modal="true" aria-labelledby="qr-title">
-        <div className="modal-header">
-          <div><span className="section-kicker">PUBLIC VEHICLE RECORD</span><h2 id="qr-title">QR code</h2><p>Scan to view {vehicle.makeBody || 'this vehicle'} without signing in.</p></div>
-          <button className="icon-button modal-close" onClick={onClose} aria-label="Close"><Icon name="close" size={19} /></button>
-        </div>
-        {image ? <img className="qr-image" src={image} alt={`QR code for ${vehicle.makeBody || 'vehicle record'}`} /> : <p className="qr-message" role={error ? 'alert' : 'status'}>{error || 'Creating QR code…'}</p>}
-        <p className="qr-url">{url}</p>
-        <div className="modal-actions">
-          <button className="button button-light" onClick={onClose}>Close</button>
-          <a className="button button-outline qr-open-link" href={url} target="_blank" rel="noopener noreferrer">Open public page <Icon name="arrow" size={15} /></a>
-          {image && <a className="button button-outline qr-download" href={image} download={`vehicle-${vehicle.publicKey}.png`}>Download QR</a>}
-        </div>
+      <section className="modal-card qr-modal" role="dialog" aria-modal="true" aria-label={`QR code for ${vehicle.makeBody || 'vehicle record'}`}>
+        {image && <img className="qr-image" src={image} alt={`QR code for ${vehicle.makeBody || 'vehicle record'}`} />}
+        {error && <span className="sr-only" role="alert">{error}</span>}
       </section>
     </div>
   )
