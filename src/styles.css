@@ -441,6 +441,16 @@ main.certificate-page {
   .page-footer { gap: 10px; }
 }
 @media (max-width: 720px) {
+  main.certificate-page {
+    width: 100%;
+    max-width: none;
+    min-height: 100vh;
+    margin: 0;
+    background: #fff;
+    color: #333;
+    font-family: Roboto, "Noto Naskh Arabic", Tahoma, sans-serif;
+  }
+
   .certificate {
     width: 100%;
     padding: 28px 10px 40px;
