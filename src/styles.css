@@ -198,6 +198,33 @@ tbody tr:hover .actions-col { background: #fcfdfa; }
 .modal-header { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 22px; }
 .modal-header h2 { margin-top: 6px; font-size: 20px; }
 .modal-close { flex: 0 0 33px; border-color: #ecefea; }
+.qr-modal { width: min(100%, 430px); text-align: center; }
+.qr-modal .modal-header { text-align: left; }
+.qr-image { display: block; width: min(240px, 100%); height: auto; margin: 0 auto 14px; image-rendering: pixelated; }
+.qr-url { overflow-wrap: anywhere; color: #7a877f; font-size: 10px; line-height: 1.5; }
+.qr-message { min-height: 70px; display: grid; place-items: center; color: #7a877f; font-size: 12px; }
+.qr-download { text-decoration: none; }
+.public-certificate { min-height: 100vh; padding: 0 24px; color: #263430; background: #f5f6f3; }
+.public-certificate-header { max-width: 900px; min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 0 auto; border-bottom: 1px solid #e5e9e3; }
+.public-certificate-brand { display: flex; flex-direction: column; gap: 4px; text-decoration: none; }
+.public-certificate-brand .brand-name { color: #263b34; }
+.public-certificate-brand .brand-caption { color: #8b9790; }
+.public-view-status { display: flex; align-items: center; gap: 14px; color: #89958d; font-size: 11px; }
+.public-view-status a { color: #526d5b; font-weight: 600; text-decoration: none; }
+.public-view-status a:hover { text-decoration: underline; }
+.public-certificate-card { max-width: 720px; margin: 54px auto 0; padding: clamp(24px, 5vw, 48px); border: 1px solid #e5e9e3; border-radius: 12px; background: #fff; box-shadow: 0 12px 38px #263b2a0a; }
+.public-certificate-kicker { display: flex; align-items: center; gap: 8px; color: #a18165; font-size: 9px; font-weight: 700; letter-spacing: 1.3px; }
+.public-certificate-kicker span { width: 7px; height: 7px; border-radius: 50%; background: #80a587; }
+.public-certificate-card h1 { margin-top: 15px; font-size: clamp(23px, 4vw, 32px); }
+.public-certificate-intro { margin-top: 8px; color: #89948e; font-size: 12px; line-height: 1.6; }
+.public-certificate-details { display: grid; grid-template-columns: 1fr 1fr; margin: 30px 0 0; border-top: 1px solid #edf0ec; }
+.public-certificate-details div { min-width: 0; padding: 15px 8px 15px 0; border-bottom: 1px solid #edf0ec; }
+.public-certificate-details dt { color: #89958d; font-size: 10px; }
+.public-certificate-details dd { margin: 6px 0 0; color: #34443c; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.public-certificate-note { margin-top: 24px; color: #929d96; font-size: 10px; line-height: 1.5; }
+.public-record-message { margin-top: 24px; color: #64736a; font-size: 13px; line-height: 1.6; }
+.public-record-error { color: #a35248; }
+.public-certificate-footer { max-width: 900px; margin: 18px auto; color: #a0a9a2; font-size: 9px; text-align: center; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px 13px; }
 .form-field { display: flex; flex-direction: column; gap: 6px; color: #56645c; font-size: 10px; font-weight: 600; }
 .form-field > span em { margin-left: 3px; color: #a2aaa4; font-size: 9px; font-style: normal; font-weight: 400; }
@@ -313,6 +340,11 @@ tbody tr:hover .actions-col { background: #fcfdfa; }
   .modal-header { margin-bottom: 17px; }
   .form-field input, .input-prefix, .select-wrap { height: 36px; }
   .page-footer { gap: 10px; }
+  .public-certificate { padding: 0 14px; }
+  .public-certificate-header { min-height: 66px; }
+  .public-view-status { align-items: flex-end; flex-direction: column; gap: 5px; font-size: 9px; }
+  .public-certificate-card { margin-top: 25px; padding: 22px 18px; }
+  .public-certificate-details { grid-template-columns: 1fr; margin-top: 20px; }
 }
 
 .public-message { margin-top: 18vh; color: #66746c; font-size: 14px; }

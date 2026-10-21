@@ -22,6 +22,7 @@ function createRecordKey() {
 export function fromRow(row) {
   return {
     id: row.id,
+    publicKey: row.public_key || '',
     date: row.certificate_date || '',
     makeBody: row.make_body || '',
     model: row.model || '',
@@ -67,7 +68,7 @@ export function loadVehicles() {
 async function fetchVehicles() {
   const { data, error } = await supabase
     .from('vehicle_certificates')
-    .select('id, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks, created_at')
+    .select('id, public_key, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks, created_at')
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -78,7 +79,7 @@ async function fetchVehicles() {
   if (localVehicles.length === 0) return []
 
   const payload = localVehicles.map((vehicle) => toRow({ ...blankVehicle, ...vehicle }, true))
-  const inserted = await supabase.from('vehicle_certificates').insert(payload).select('id, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks, created_at')
+  const inserted = await supabase.from('vehicle_certificates').insert(payload).select('id, public_key, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks, created_at')
   if (inserted.error) throw inserted.error
   localStorage.removeItem(LOCAL_KEY)
   return inserted.data.map(fromRow)
@@ -88,7 +89,7 @@ export async function insertVehicle(vehicle) {
   const { data, error } = await supabase
     .from('vehicle_certificates')
     .insert(toRow(vehicle, true))
-    .select('id, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks, created_at')
+    .select('id, public_key, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks, created_at')
     .single()
   if (error) throw error
   return fromRow(data)
@@ -99,7 +100,7 @@ export async function updateVehicle(id, vehicle) {
     .from('vehicle_certificates')
     .update(toRow(vehicle, false))
     .eq('id', id)
-    .select('id, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks, created_at')
+    .select('id, public_key, certificate_date, make_body, model, country, chassis_no, engine_no, color, remarks, created_at')
     .single()
   if (error) throw error
   return fromRow(data)
@@ -108,4 +109,13 @@ export async function updateVehicle(id, vehicle) {
 export async function removeVehicle(id) {
   const { error } = await supabase.from('vehicle_certificates').delete().eq('id', id)
   if (error) throw error
+}
+
+export async function loadPublicVehicle(publicKey) {
+  const { data, error } = await supabase.rpc('get_public_vehicle_certificate', {
+    lookup_key: publicKey,
+  })
+  if (error) throw error
+  if (!data?.length) return null
+  return fromRow(data[0])
 }

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import QRCode from 'qrcode'
 import { supabase } from './supabase.js'
 import { blankVehicle, insertVehicle, loadVehicles, removeVehicle, updateVehicle } from './vehicles.js'
 
@@ -13,6 +14,11 @@ function Icon({ name, size = 18, strokeWidth = 1.8 }) {
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
     'aria-hidden': true,
+  }
+
+  function openQr(vehicle) {
+    setActionMenu(null)
+    setQrVehicle(vehicle)
   }
 
   const paths = {
@@ -34,6 +40,7 @@ function Icon({ name, size = 18, strokeWidth = 1.8 }) {
     check: <path d="m5 12 4 4L19 6" />,
     lock: <><rect x="5" y="10" width="14" height="11" rx="2" /><path d="M8 10V7a4 4 0 1 1 8 0v3M12 14v3" /></>,
     eye: <><path d="M2.5 12S6.2 6.5 12 6.5 21.5 12 21.5 12 17.8 17.5 12 17.5 2.5 12 2.5 12Z" /><circle cx="12" cy="12" r="2.6" /></>,
+    qr: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><path d="M14 14h3v3h-3zM20 14v2M17 20h4M20 19v2" /></>,
   }
 
   return <svg {...shared}>{paths[name] || paths.grid}</svg>
@@ -79,6 +86,7 @@ function App({ user }) {
   const [vehicles, setVehicles] = useState([])
   const [query, setQuery] = useState('')
   const [modal, setModal] = useState(null)
+  const [qrVehicle, setQrVehicle] = useState(null)
   const [form, setForm] = useState(blankVehicle)
   const [toast, setToast] = useState('')
   const [activeNav, setActiveNav] = useState('Dashboard')
@@ -145,6 +153,9 @@ function App({ user }) {
 
   const chassisCount = vehicles.filter((vehicle) => vehicle.chassisNo).length
   const countryCount = new Set(vehicles.map((vehicle) => vehicle.country).filter(Boolean)).size
+  const qrUrl = qrVehicle?.publicKey
+    ? new URL(`/certificate/${encodeURIComponent(qrVehicle.publicKey)}`, window.location.origin).toString()
+    : ''
 
   function openCreate() {
     setForm(blankVehicle)
@@ -441,11 +452,20 @@ function App({ user }) {
         </div>
       )}
 
+      {qrVehicle && (
+        <QRCodeDialog
+          vehicle={qrVehicle}
+          url={qrUrl}
+          onClose={() => setQrVehicle(null)}
+        />
+      )}
+
       {actionMenu && (
         <>
           <button className="menu-backdrop" aria-label="Close actions" onClick={() => setActionMenu(null)} />
           <div className="action-menu" role="menu" style={{ top: actionMenu.top, left: actionMenu.left }}>
             <button role="menuitem" onClick={() => openView(actionMenu.vehicle)}><Icon name="eye" size={15} /> View</button>
+            <button role="menuitem" onClick={() => openQr(actionMenu.vehicle)}><Icon name="qr" size={15} /> QR code</button>
             <button role="menuitem" onClick={() => openEdit(actionMenu.vehicle)}><Icon name="edit" size={15} /> Edit</button>
             <button role="menuitem" className="danger" onClick={() => openDelete(actionMenu.vehicle)}><Icon name="trash" size={15} /> Delete</button>
           </div>
@@ -453,6 +473,43 @@ function App({ user }) {
       )}
 
       {toast && <div className="toast" role="status"><span><Icon name="check" size={16} /></span>{toast}</div>}
+    </div>
+  )
+}
+
+function QRCodeDialog({ vehicle, url, onClose }) {
+  const [image, setImage] = useState('')
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let active = true
+    QRCode.toDataURL(url, { width: 240, margin: 2, errorCorrectionLevel: 'M' })
+      .then((dataUrl) => {
+        if (active) setImage(dataUrl)
+      })
+      .catch((generationError) => {
+        if (active) setError(generationError.message || 'Could not generate the QR code.')
+      })
+    return () => {
+      active = false
+    }
+  }, [url])
+
+  return (
+    <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
+      <section className="modal-card qr-modal" role="dialog" aria-modal="true" aria-labelledby="qr-title">
+        <div className="modal-header">
+          <div><span className="section-kicker">PUBLIC VEHICLE RECORD</span><h2 id="qr-title">QR code</h2><p>Scan to view {vehicle.makeBody || 'this vehicle'} without signing in.</p></div>
+          <button className="icon-button modal-close" onClick={onClose} aria-label="Close"><Icon name="close" size={19} /></button>
+        </div>
+        {image ? <img className="qr-image" src={image} alt={`QR code for ${vehicle.makeBody || 'vehicle record'}`} /> : <p className="qr-message" role={error ? 'alert' : 'status'}>{error || 'Creating QR code…'}</p>}
+        <p className="qr-url">{url}</p>
+        <div className="modal-actions">
+          <button className="button button-light" onClick={onClose}>Close</button>
+          <a className="button button-outline qr-open-link" href={url} target="_blank" rel="noopener noreferrer">Open public page <Icon name="arrow" size={15} /></a>
+          {image && <a className="button button-outline qr-download" href={image} download={`vehicle-${vehicle.publicKey}.png`}>Download QR</a>}
+        </div>
+      </section>
     </div>
   )
 }

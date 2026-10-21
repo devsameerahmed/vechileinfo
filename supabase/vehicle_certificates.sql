@@ -52,3 +52,36 @@ create policy "Dashboard can delete a vehicle certificate"
   for delete
   to authenticated
   using (true);
+
+create or replace function public.get_public_vehicle_certificate(lookup_key text)
+returns table (
+  certificate_date text,
+  make_body text,
+  model text,
+  country text,
+  chassis_no text,
+  engine_no text,
+  color text,
+  remarks text
+)
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+  select
+    certificate.certificate_date,
+    certificate.make_body,
+    certificate.model,
+    certificate.country,
+    certificate.chassis_no,
+    certificate.engine_no,
+    certificate.color,
+    certificate.remarks
+  from public.vehicle_certificates as certificate
+  where certificate.public_key = lookup_key
+  limit 1;
+$$;
+
+revoke all on function public.get_public_vehicle_certificate(text) from public;
+grant execute on function public.get_public_vehicle_certificate(text) to anon, authenticated;
