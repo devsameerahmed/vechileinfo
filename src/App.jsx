@@ -458,13 +458,18 @@ function App({ user }) {
             </div>
             <form onSubmit={saveVehicle}>
               <div className="grid grid-cols-2 gap-x-[13px] gap-y-[15px] max-[480px]:grid-cols-1 max-[480px]:gap-[11px]">
+                <label className={field}><span>Certificate Number <em className={optional}>optional</em></span><input className={control} value={form.certificateNumber} onChange={(event) => setForm({ ...form, certificateNumber: event.target.value })} placeholder="29636" /></label>
                 <label className={field}><span>Date</span><input className={control} required value={form.date} onChange={(event) => setForm({ ...form, date: event.target.value })} placeholder="08/09/2026" /></label>
                 <label className={field}><span>Make / Body Type</span><input className={control} required value={form.makeBody} onChange={(event) => setForm({ ...form, makeBody: event.target.value })} placeholder="LEXUS - LS460 (Sedan)" /></label>
+                <label className={field}><span>Importer Name <em className={optional}>optional</em></span><input className={control} value={form.importerName} onChange={(event) => setForm({ ...form, importerName: event.target.value })} placeholder="Importer or owner name" /></label>
+                <label className={field}><span>Declaration Number <em className={optional}>optional</em></span><input className={control} value={form.declarationNumber} onChange={(event) => setForm({ ...form, declarationNumber: event.target.value })} placeholder="Customs declaration number" /></label>
                 <label className={field}><span>Model</span><input className={control} required value={form.model} onChange={(event) => setForm({ ...form, model: event.target.value })} placeholder="2014" /></label>
                 <label className={field}><span>Country</span><input className={control} required value={form.country} onChange={(event) => setForm({ ...form, country: event.target.value })} placeholder="Japan" /></label>
                 <label className={field}><span>Chassis No</span><input className={control} required value={form.chassisNo} onChange={(event) => setForm({ ...form, chassisNo: event.target.value })} placeholder="Chassis number" /></label>
                 <label className={field}><span>Engine No <em className={optional}>optional</em></span><input className={control} value={form.engineNo} onChange={(event) => setForm({ ...form, engineNo: event.target.value })} placeholder="Engine number" /></label>
                 <label className={field}><span>Color</span><input className={control} required value={form.color} onChange={(event) => setForm({ ...form, color: event.target.value })} placeholder="Gray" /></label>
+                <label className={field}><span>User ID <em className={optional}>optional</em></span><input className={control} value={form.userId} onChange={(event) => setForm({ ...form, userId: event.target.value })} placeholder="Employee ID" /></label>
+                <label className={field}><span>Status</span><input className={control} value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })} placeholder="VALID" /></label>
                 <label className={cn(field, 'col-span-2 max-[480px]:col-span-1')}><span>Remarks <em className={optional}>optional</em></span><textarea className={area} value={form.remarks} onChange={(event) => setForm({ ...form, remarks: event.target.value })} placeholder="Notes" /></label>
               </div>
               <div className="mt-[22px] flex justify-end gap-2 border-t border-[#eef0ed] pt-4"><button type="button" className={buttonLight} onClick={() => setModal(null)} disabled={saving}>Cancel</button><button type="submit" className={buttonPrimary} disabled={saving}>{modal.vehicleId ? 'Save changes' : <><Icon name="plus" size={17} /> Add vehicle</>}</button></div>
@@ -532,6 +537,7 @@ function App({ user }) {
 function QRCodeDialog({ vehicle, value, onClose }) {
   const [image, setImage] = useState('')
   const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     if (!value) {
@@ -553,6 +559,44 @@ function QRCodeDialog({ vehicle, value, onClose }) {
     }
   }, [value])
 
+  async function copyLink() {
+    if (!value) return
+
+    try {
+      let copiedToClipboard = false
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(value)
+          copiedToClipboard = true
+        } catch {
+          copiedToClipboard = false
+        }
+      }
+
+      if (!copiedToClipboard) {
+        const input = document.createElement('textarea')
+        input.value = value
+        input.setAttribute('readonly', '')
+        input.style.position = 'fixed'
+        input.style.opacity = '0'
+        document.body.appendChild(input)
+        try {
+          input.select()
+          copiedToClipboard = document.execCommand('copy')
+        } finally {
+          input.remove()
+        }
+      }
+
+      if (!copiedToClipboard) throw new Error('Clipboard access is unavailable in this browser.')
+      setCopied(true)
+      setError('')
+    } catch (copyError) {
+      setCopied(false)
+      setError(copyError.message || 'Could not copy the certificate link. Please copy the link manually.')
+    }
+  }
+
   useEffect(() => {
     function closeOnEscape(event) {
       if (event.key === 'Escape') onClose()
@@ -561,11 +605,55 @@ function QRCodeDialog({ vehicle, value, onClose }) {
     return () => window.removeEventListener('keydown', closeOnEscape)
   }, [onClose])
 
+  async function downloadPdf() {
+    if (!image) return
+
+    try {
+      const transparentImage = await QRCode.toDataURL(value, {
+        width: 560,
+        margin: 2,
+        errorCorrectionLevel: 'M',
+        color: { light: '#ffffff00' },
+      })
+      const { jsPDF } = await import('jspdf')
+      const pdf = new jsPDF({ unit: 'mm', format: [100, 100] })
+      pdf.addImage(transparentImage, 'PNG', 10, 10, 80, 80)
+      const filename = (vehicle.certificateNumber || vehicle.chassisNo || 'vehicle-qr')
+        .toString()
+        .replace(/[^a-z0-9-_]+/gi, '-')
+        .replace(/^-|-$/g, '') || 'vehicle-qr'
+      pdf.save(`${filename}.pdf`)
+    } catch (downloadError) {
+      setError(downloadError.message || 'Could not download the QR code PDF.')
+    }
+  }
+
   return (
     <div className={backdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className={qrModalClass} role="dialog" aria-modal="true" aria-label={`QR code for ${vehicle.makeBody || 'vehicle record'}`}>
         {image && <img className="block h-auto w-[min(280px,100%)] [image-rendering:pixelated]" src={image} alt={`QR code for ${vehicle.makeBody || 'vehicle record'}`} />}
-        {error && <span className="sr-only" role="alert">{error}</span>}
+        {value && (
+          <a
+            className="max-w-full break-all text-center text-xs text-[#485851] underline"
+            href={value}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {value}
+          </a>
+        )}
+        <button
+          className={buttonOutline}
+          type="button"
+          onClick={copyLink}
+          disabled={!value}
+        >
+          {copied ? 'Link copied' : 'Copy link'}
+        </button>
+        {error && <p className="m-0 text-center text-xs text-[#aa5147]" role="alert">{error}</p>}
+        <button className={`${buttonPrimary} disabled:cursor-not-allowed disabled:opacity-50`} type="button" onClick={downloadPdf} disabled={!image}>
+          Download PDF
+        </button>
       </section>
     </div>
   )

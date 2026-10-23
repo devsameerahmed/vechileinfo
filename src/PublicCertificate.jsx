@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { loadPublicVehicle } from './vehicles.js'
 
+const FONT = 'Arial, Helvetica, "Noto Naskh Arabic", sans-serif'
+const GOLD = '#bc9e6a'
+const BORDER = '#d0d0d0'
+
 const certificateFields = [
   ['certificateNumber', 'Certificate Number', 'رقم البطاقة'],
   ['date', 'Date', 'تاريخ'],
@@ -24,9 +28,15 @@ function PublicCertificate({ publicKey }) {
 
   useEffect(() => {
     const previousTitle = document.title
+    const previousHtmlBg = document.documentElement.style.backgroundColor
+    const previousBodyBg = document.body.style.backgroundColor
     document.title = 'Vehicle Certificate Details'
+    document.documentElement.style.backgroundColor = '#ffffff'
+    document.body.style.backgroundColor = '#ffffff'
     return () => {
       document.title = previousTitle
+      document.documentElement.style.backgroundColor = previousHtmlBg
+      document.body.style.backgroundColor = previousBodyBg
     }
   }, [])
 
@@ -54,57 +64,161 @@ function PublicCertificate({ publicKey }) {
   const rows = vehicle
     ? certificateFields.map(([key, label, arabic]) => ({
       label,
-      value: key === 'makeBody' ? formatMakeBody(vehicle[key]) : vehicle[key],
+      value: vehicle[key],
       arabic,
       status: key === 'status' && vehicle[key]?.toUpperCase() === 'VALID',
     }))
     : []
 
-  const bodyCell = 'border border-[#d7d7d7] px-2 py-[11px] align-middle text-sm leading-tight tracking-normal max-[720px]:px-1.5 max-[720px]:py-2.5 max-[720px]:text-[13.5px]'
-
   return (
-    <main className="min-h-screen w-full max-w-none bg-white font-certificate text-[#333]">
-      <div className="mx-auto w-full max-w-[430px] px-3 pt-[34px] pb-12 max-[720px]:px-2.5 max-[720px]:pt-7 max-[720px]:pb-10">
-        <h1 className="m-0 max-w-none text-center font-certificate text-[26px] leading-[1.25] font-medium tracking-normal text-[#2a2a2a] max-[720px]:text-2xl">Vehicle Certificate Details</h1>
-        <p className="mt-2 mb-[18px] text-center font-arabic text-2xl leading-[1.4] font-medium text-[#2a2a2a] max-[720px]:text-[22px]" lang="ar" dir="rtl">
-          تفاصيل شهادة المركبة
-        </p>
+    <main
+      style={{
+        minHeight: '100vh',
+        width: '100%',
+        margin: 0,
+        background: '#ffffff',
+        fontFamily: FONT,
+        WebkitFontSmoothing: 'antialiased',
+      }}
+    >
+      <div
+        style={{
+          boxSizing: 'border-box',
+          width: '100%',
+          maxWidth: '600px',
+          margin: '0 auto',
+          padding: '0 12px',
+        }}
+      >
+        <div style={{ marginTop: '3.25rem', textAlign: 'center' }}>
+          <h3
+            style={{
+              marginTop: 0,
+              marginBottom: '0.5rem',
+              padding: 0,
+              fontFamily: FONT,
+              fontSize: '1.75rem',
+              fontWeight: 500,
+              lineHeight: 1.2,
+              color: '#000000',
+              letterSpacing: 'normal',
+            }}
+          >
+            Vehicle Certificate Details
+          </h3>
+          <p
+            lang="ar"
+            dir="rtl"
+            style={{
+              margin: '8px 0 0',
+              padding: 0,
+              fontFamily: FONT,
+              fontSize: '24px',
+              fontWeight: 400,
+              lineHeight: '30px',
+              color: '#000000',
+            }}
+          >
+            تفاصيل شهادة المركبة
+          </p>
+        </div>
         {loading ? (
-          <p className="my-[18px] text-center text-sm leading-normal text-[#333]" role="status">Loading vehicle record…</p>
+          <p style={{ margin: '18px 0', textAlign: 'center', fontSize: '14px', color: '#000000' }} role="status">Loading vehicle record…</p>
         ) : error ? (
-          <p className="my-[18px] text-center text-sm leading-normal text-[#a35248]" role="alert">{error}</p>
+          <p style={{ margin: '18px 0', textAlign: 'center', fontSize: '14px', color: '#a35248' }} role="alert">{error}</p>
         ) : !vehicle ? (
-          <p className="my-[18px] text-center text-sm leading-normal text-[#333]" role="status">This public vehicle record could not be found.</p>
+          <p style={{ margin: '18px 0', textAlign: 'center', fontSize: '14px', color: '#000000' }} role="status">This public vehicle record could not be found.</p>
         ) : (
-          <table className="w-full table-fixed border-collapse bg-white">
+          <table
+            style={{
+              width: '100%',
+              marginTop: '16px',
+              borderCollapse: 'collapse',
+              borderSpacing: 0,
+              tableLayout: 'fixed',
+              border: `1px solid ${BORDER}`,
+              background: '#ffffff',
+              fontFamily: FONT,
+            }}
+          >
             <colgroup>
-              <col className="w-[30%]" />
-              <col className="w-[42%]" />
-              <col className="w-[28%]" />
+              <col style={{ width: '25%' }} />
+              <col style={{ width: '50%' }} />
+              <col style={{ width: '25%' }} />
             </colgroup>
             <thead>
               <tr>
-                <th className="h-[34px] border border-[#c5a15a] border-x-[#efe4cc] bg-[#c5a15a] p-0" />
-                <th className="h-[34px] border border-[#c5a15a] border-x-[#efe4cc] bg-[#c5a15a] p-0" />
-                <th className="h-[34px] border border-[#c5a15a] border-x-[#efe4cc] bg-[#c5a15a] p-0" />
+                {[0, 1, 2].map((i) => (
+                  <th
+                    key={i}
+                    style={{
+                      height: '34px',
+                      padding: 0,
+                      backgroundColor: GOLD,
+                      borderTop: `1px solid ${GOLD}`,
+                      borderBottom: `1px solid ${GOLD}`,
+                      borderLeft: i === 0 ? `1px solid ${GOLD}` : '2px solid #fff',
+                      borderRight: i === 2 ? `1px solid ${GOLD}` : '2px solid #fff',
+                      fontSize: 0,
+                      lineHeight: 0,
+                    }}
+                  />
+                ))}
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
                 <tr key={row.label}>
                   <th
-                    className={`${bodyCell} text-left font-certificate font-normal text-[#3a3a3a]`}
                     scope="row"
+                    style={{
+                      border: `1px solid ${BORDER}`,
+                      padding: '6px 8px',
+                      verticalAlign: 'middle',
+                      textAlign: 'left',
+                      fontFamily: FONT,
+                      fontSize: '14px',
+                      fontWeight: 400,
+                      lineHeight: '18px',
+                      color: '#000000',
+                      boxSizing: 'border-box',
+                    }}
                   >
                     {row.label}
                   </th>
-                  <td className={`${bodyCell} text-center font-certificate font-bold text-[#111]`}>
-                    <CellValue value={row.value} status={row.status} />
+                  <td
+                    style={{
+                      border: `1px solid ${BORDER}`,
+                      padding: '6px 8px',
+                      verticalAlign: 'middle',
+                      textAlign: 'center',
+                      fontFamily: FONT,
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      lineHeight: '18px',
+                      color: row.status ? '#008000' : '#000000',
+                      whiteSpace: 'normal',
+                      overflowWrap: 'anywhere',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    {row.value || ''}
                   </td>
                   <td
-                    className={`${bodyCell} text-right font-arabic leading-[1.45] font-medium text-[#333]`}
                     lang="ar"
                     dir="rtl"
+                    style={{
+                      border: `1px solid ${BORDER}`,
+                      padding: '6px 8px',
+                      verticalAlign: 'middle',
+                      textAlign: 'right',
+                      fontFamily: FONT,
+                      fontSize: '14px',
+                      fontWeight: 400,
+                      lineHeight: '18px',
+                      color: '#000000',
+                      boxSizing: 'border-box',
+                    }}
                   >
                     {row.arabic}
                   </td>
@@ -115,24 +229,6 @@ function PublicCertificate({ publicKey }) {
         )}
       </div>
     </main>
-  )
-}
-
-function formatMakeBody(value) {
-  const match = value?.match(/^(.*?)(\s*\([^)]*\))$/)
-  return match ? [match[1], match[2].trim()] : value
-}
-
-function CellValue({ value, status }) {
-  const lines = Array.isArray(value) ? value : [value || '']
-  return (
-    <span className={status ? 'font-bold text-[#1e9a1e]' : undefined}>
-      {lines.map((line) => (
-        <span key={line || 'empty'} className="block">
-          {line}
-        </span>
-      ))}
-    </span>
   )
 }
 
